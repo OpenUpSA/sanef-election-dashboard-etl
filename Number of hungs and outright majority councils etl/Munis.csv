@@ -1,0 +1,258 @@
+ProvinceID,MunicipalityID,Municipality,MunicTypeID
+1,1117,BUF - Buffalo City,1
+1,1101,DC10 - Sarah Baartman,3
+1,1112,DC12 - Amathole,3
+1,1121,DC13 - Chris Hani,3
+1,1130,DC14 - Joe Gqabi,3
+1,1135,DC15 - O R Tambo,3
+1,1144,DC44 - Alfred Nzo,3
+1,1102,EC101 - Camdeboo,2
+1,1103,EC102 - Blue Crane Route,2
+1,1105,EC104 - Makana,2
+1,1106,EC105 - Ndlambe,2
+1,1107,EC106 - Sundays River Valley,2
+1,1109,EC108 - Kouga,2
+1,1110,EC109 - Kou-Kamma,2
+1,1113,EC121 - Mbhashe,2
+1,1114,EC122 - Mnquma,2
+1,1115,EC123 - Great Kei,2
+1,1116,EC124 - Amahlathi,2
+1,1118,EC126 - Ngqushwa,2
+1,1147,EC129 - Nkonkobe/Nxuba,2
+1,1122,EC131 - Inxuba Yethemba,2
+1,1126,EC135 - Intsika Yethu,2
+1,1127,EC136 - Emalahleni,2
+1,1128,EC137 - Engcobo,2
+1,1129,EC138 - Sakhisizwe,2
+1,1149,EC139 - Tsolwana/Inkwanca/Lukanji,2
+1,1131,EC141 - Elundini,2
+1,1132,EC142 - Senqu,2
+1,1148,EC145 - Maletswai/Gariep,2
+1,1138,EC153 - Ngquza Hill,2
+1,1139,EC154 - Port St Johns,2
+1,1140,EC155 - Nyandeni,2
+1,1141,EC156 - Mhlontlo,2
+1,1142,EC157 - King Sabata Dalindyebo,2
+1,4034,EC441 - Matatiele,2
+1,1031,EC442 - Umzimvubu,2
+1,1136,EC443 - Mbizana,2
+1,1137,EC444 - Ntabankulu,2
+1,1001,NMA - Nelson Mandela Bay,1
+2,2201,DC16 - Xhariep,3
+2,2209,DC18 - Lejweleputswa,3
+2,2215,DC19 - Thabo Mofutsanyane,3
+2,2221,DC20 - Fezile Dabi ,3
+2,2202,FS161 - Letsemeng,2
+2,2203,FS162 - Kopanong,2
+2,2204,FS163 - Mohokare,2
+2,2210,FS181 - Masilonyana,2
+2,2211,FS182 - Tokologo,2
+2,2212,FS183 - Tswelopele,2
+2,2213,FS184 - Matjhabeng,2
+2,2214,FS185 - Nala,2
+2,2216,FS191 - Setsoto,2
+2,2217,FS192 - Dihlabeng,2
+2,2218,FS193 - Nketoana,2
+2,2219,FS194 - Maluti a Phofung,2
+2,2220,FS195 - Phumelela,2
+2,2208,FS196 - Mantsopa,2
+2,2222,FS201 - Moqhaka,2
+2,2223,FS203 - Ngwathe,2
+2,2224,FS204 - Metsimaholo,2
+2,2225,FS205 - Mafube,2
+2,2207,MAN - Mangaung,1
+3,3301,DC42 - Sedibeng,3
+3,3038,DC48 - West Rand,3
+3,3002,EKU - Ekurhuleni,1
+3,3302,GT421 - Emfuleni,2
+3,3303,GT422 - Midvaal,2
+3,3304,GT423 - Lesedi,2
+3,3040,GT481 - Mogale City,2
+3,3039,GT484 - Merafong City,2
+3,3332,GT485 - Randfontein/Westonaria,2
+3,3003,JHB - City of Johannesburg,1
+3,3004,TSH - Tshwane Metro,1
+4,4401,DC21 - Ugu,3
+4,4408,DC22 - UMgungundlovu,3
+4,4417,DC23 - Uthukela,3
+4,4425,DC24 - Umzinyathi,3
+4,4431,DC25 - Amajuba,3
+4,4435,DC26 - Zululand,3
+4,4441,DC27 - Umkhanyakude,3
+4,4448,DC28 - Uthungulu,3
+4,4455,DC29 - iLembe,3
+4,4460,DC43 - Harry Gwala,3
+4,4005,ETH - eThekwini,1
+4,4403,KZN212 - Umdoni,2
+4,4404,KZN213 - Umzumbe,2
+4,4405,KZN214 - UMuziwabantu,2
+4,4407,KZN216 - Hibiscus Coast,2
+4,4409,KZN221 - uMshwathi,2
+4,4410,KZN222 - uMngeni,2
+4,4411,KZN223 - Mooi Mpofana,2
+4,4412,KZN224 - Impendle,2
+4,4413,KZN225 - Msunduzi,2
+4,4414,KZN226 - Mkhambathini,2
+4,4415,KZN227 - Richmond,2
+4,4421,KZN235 - Okhahlamba,2
+4,4461,KZN237 - Estcourt/Loskop,2
+4,4462,KZN238 - Ladysmith/Waaihoek,2
+4,4426,KZN241 - Endumeni,2
+4,4427,KZN242 - Nqutu,2
+4,4429,KZN244 - Msinga,2
+4,4430,KZN245 - Umvoti,2
+4,4432,KZN252 - Newcastle,2
+4,4433,KZN253 - eMadlangeni,2
+4,4434,KZN254 - Dannhauser,2
+4,4436,KZN261 - eDumbe,2
+4,4437,KZN262 - UPhongolo,2
+4,4438,KZN263 - Abaqulusi,2
+4,4439,KZN265 - Nongoma,2
+4,4440,KZN266 - Ulundi,2
+4,4442,KZN271 - Umhlabuyalingana,2
+4,4443,KZN272 - Jozini,2
+4,4446,KZN275 - Mtubatuba,2
+4,4463,KZN276 - Hluhluwe/Somkele,2
+4,4449,KZN281 - Mfolozi,2
+4,4450,KZN282 - uMhlathuze,2
+4,4452,KZN284 - uMlalazi,2
+4,4453,KZN285 - Mthonjaneni,2
+4,4454,KZN286 - Nkandla,2
+4,4456,KZN291 - Mandeni,2
+4,4457,KZN292 - KwaDukuza,2
+4,4458,KZN293 - Ndwedwe,2
+4,4459,KZN294 - Maphumulo,2
+4,4035,KZN433 - Greater Kokstad,2
+4,4036,KZN434 - Ubuhlebezwe,2
+4,1030,KZN435 - Umzimkhulu,2
+4,4464,KZN436 - Creighton/Underberg,2
+5,5501,DC30 - Gert Sibande,3
+5,5509,DC31 - Nkangala,3
+5,5516,DC32 - Ehlanzeni,3
+5,5502,MP301 - Chief Albert Luthuli,2
+5,5503,MP302 - Msukaligwa,2
+5,5504,MP303 - Mkhondo,2
+5,5505,MP304 - Dr Pixley Ka Isaka Seme,2
+5,5506,MP305 - Lekwa,2
+5,5507,MP306 - Dipaleseng,2
+5,5508,MP307 - Govan Mbeki,2
+5,5510,MP311 - Victor Khanye,2
+5,5511,MP312 - Emalahleni,2
+5,5512,MP313 - Steve Tshwete,2
+5,5513,MP314 - Emakhazeni,2
+5,5514,MP315 - Thembisile Hani,2
+5,5515,MP316 - Dr JS Moroka,2
+5,5517,MP321 - Thaba Chweu,2
+5,5520,MP324 - Nkomazi,2
+5,7027,MP325 - Bushbuckridge,2
+5,5524,MP326 - Mbombela/Umjindi,2
+6,6011,DC45 - John Taolo Gaetsewe,3
+6,6601,DC6 - NAMAKWA,3
+6,6609,DC7 - Pixley Ka Seme,3
+6,6619,DC8 - SIYANDA,3
+6,6044,DC9 - FRANCES BAARD,3
+6,6602,NC061 - RICHTERSVELD,2
+6,6603,NC062 - NAMA KHOI,2
+6,6604,NC064 - KAMIESBERG,2
+6,6605,NC065 - HANTAM,2
+6,6606,NC066 - KAROO HOOGLAND,2
+6,6607,NC067 - KHâI-MA,2
+6,6610,NC071 - UBUNTU,2
+6,6611,NC072 - UMSOBOMVU,2
+6,6612,NC073 - EMTHANJENI,2
+6,6613,NC074 - KAREEBERG,2
+6,6614,NC075 - RENOSTERBERG,2
+6,6615,NC076 - THEMBELIHLE,2
+6,6616,NC077 - SIYATHEMBA,2
+6,6617,NC078 - SIYANCUMA,2
+6,6621,NC082 - KAI !GARIB,2
+6,6623,NC084 - !KHEIS,2
+6,6624,NC085 - TSANTSABANE,2
+6,6625,NC086 - KGATELOPELE,2
+6,6627,NC087 - //Khara Hais/Mier,2
+6,6046,NC091 - Sol Plaatje,2
+6,6047,NC092 - Dikgatlong,2
+6,6048,NC093 - Magareng,2
+6,6045,NC094 - Phokwane,2
+6,6015,NC451 - Joe Morolong,2
+6,6012,NC452 - GA-SEGONYANA,2
+6,6013,NC453 - GAMAGARA,2
+7,7701,DC33 - Mopani,3
+7,7706,DC34 - Vhembe,3
+7,7711,DC35 - Capricorn,3
+7,7717,DC36 - Waterberg,3
+7,5019,DC47 - Sekhukhune,3
+7,7702,LIM331 - Greater Giyani,2
+7,7703,LIM332 - Greater Letaba,2
+7,7704,LIM333 - Greater Tzaneen,2
+7,7705,LIM334 - Ba-Phalaborwa,2
+7,7028,LIM335 - Maruleng,2
+7,7707,LIM341 - Musina,2
+7,7709,LIM343 - Thulamela,2
+7,7710,LIM344 - Makhado,2
+7,7726,LIM345 - New Municipality,2
+7,7712,LIM351 - Blouberg,2
+7,7714,LIM353 - Molemole,2
+7,7715,LIM354 - Polokwane,2
+7,7716,LIM355 - Lepele-Nkumpi,2
+7,7718,LIM361 - Thabazimbi,2
+7,7719,LIM362 - Lephalale,2
+7,7722,LIM366 - Bela-Bela,2
+7,7723,LIM367 - Mogalakwena,2
+7,7724,LIM368 - Modimolle/Mookgopong,2
+7,5020,LIM471 - Ephraim Mogale,2
+7,5021,LIM472 - Elias Motsoaledi,2
+7,7023,LIM473 - Makhuduthamaga,2
+7,7725,LIM476 - Greater Tubatse/Fetakgomo,2
+8,8801,DC37 - Bojanala,3
+8,8807,DC38 - Ngaka Modiri Molema,3
+8,8813,DC39 - Dr Ruth Segomotsi Mompati,3
+8,8820,DC40 - Dr Kenneth Kaunda,3
+8,8802,NW371 - Moretele,2
+8,8803,NW372 - Madibeng,2
+8,8804,NW373 - Rustenburg,2
+8,8805,NW374 - Kgetlengrivier,2
+8,8806,NW375 - Moses Kotane,2
+8,8808,NW381 - Ratlou,2
+8,8809,NW382 - Tswaing,2
+8,8810,NW383 - Mafikeng,2
+8,8811,NW384 - Ditsobotla,2
+8,8812,NW385 - Ramotshere Moiloa,2
+8,8815,NW392 - Naledi,2
+8,8816,NW393 - Mamusa,2
+8,8817,NW394 - Greater Taung,2
+8,8819,NW396 - Lekwa-Teemane,2
+8,8825,NW397 - Ganyesa/Pomfret,2
+8,8823,NW403 - Matlosana,2
+8,8824,NW404 - Maquassi Hills,2
+8,8826,NW405 - Ventersdorp/Tlokwe,2
+9,9006,CPT - City of Cape Town,1
+9,9901,DC1 - West Coast,3
+9,9908,DC2 - Cape Winelands,3
+9,9915,DC3 - Overberg,3
+9,9921,DC4 - Eden,3
+9,9930,DC5 - Central Karoo,3
+9,9902,WC011 - Matzikama,2
+9,9903,WC012 - Cederberg,2
+9,9904,WC013 - Bergrivier,2
+9,9905,WC014 - Saldanha Bay,2
+9,9906,WC015 - Swartland,2
+9,9909,WC022 - Witzenberg,2
+9,9910,WC023 - Drakenstein,2
+9,9911,WC024 - Stellenbosch,2
+9,9912,WC025 - Breede Valley,2
+9,9913,WC026 - Langeberg,2
+9,9916,WC031 - Theewaterskloof,2
+9,9917,WC032 - Overstrand,2
+9,9918,WC033 - Cape Agulhas,2
+9,9919,WC034 - Swellendam,2
+9,9922,WC041 - Kannaland,2
+9,9923,WC042 - Hessequa,2
+9,9924,WC043 - Mossel Bay,2
+9,9925,WC044 - George,2
+9,9926,WC045 - Oudtshoorn,2
+9,9927,WC047 - Bitou,2
+9,9928,WC048 - Knysna,2
+9,9931,WC051 - Laingsburg,2
+9,9932,WC052 - Prince Albert,2
+9,9933,WC053 - Beaufort West,2
