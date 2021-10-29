@@ -234,28 +234,43 @@ async def run_program(url, query, session):
         
         if(IEC_ENDPOINT == 'seats_won'):
 
-            sqlquery =  "SELECT * FROM LED_GIS_Display_Municipal WHERE fklEEId = " + ELECTORAL_EVENT_ID
-            cursor = conn.cursor()
-            cursor.execute(sqlquery)
-
-            for row in cursor:
-
+            if(RESET_DATASET == 'reset'):
                 Results.append(
                     {
-                        'Geography': row[2],
-                        'Party Name': row[4],
+                        'Geography': 'None',
+                        'Party Name': '-',
                         'Seat Type': 'Ward',
-                        'Count': row[9]
+                        'Count': 0
                     }
                 )
-                Results.append(
-                    {
-                        'Geography': row[2],
-                        'Party Name': row[4],
-                        'Seat Type': 'PR',
-                        'Count': row[13]
-                    }
-                )
+                upload()
+                
+            else:
+
+                sqlquery =  "SELECT * FROM LED_GIS_Display_Municipal WHERE fklEEId = " + ELECTORAL_EVENT_ID
+                cursor = conn.cursor()
+                cursor.execute(sqlquery)
+
+                for row in cursor:
+
+                    muni = munis_df.loc[munis_df.MunicipalityID == row[2]]['Municipality'].values[0]
+
+                    Results.append(
+                        {
+                            'Geography': muni,
+                            'Party Name': row[4],
+                            'Seat Type': 'Ward',
+                            'Count': row[9]
+                        }
+                    )
+                    Results.append(
+                        {
+                            'Geography': muni,
+                            'Party Name': row[4],
+                            'Seat Type': 'PR',
+                            'Count': row[13]
+                        }
+                    )
 
             
     except Exception as err:
