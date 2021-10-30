@@ -24,11 +24,7 @@ RESET_DATASET = sys.argv[10]
 IEC_API = "https://api.elections.org.za"
 ELECTORAL_EVENT_ID = '402'
 
-#### DEV
-
 conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=' + DB_SERVER + ';DATABASE=' + DB + ';UID=' + DB_USERNAME + ';PWD=' + DB_PASSWORD)
-
-### END 
 
 headers = {"Authorization": "Bearer " + IEC_TOKEN}
 
@@ -60,9 +56,11 @@ def upload():
 
     Results_df = pd.DataFrame(Results)
     Results_df.to_csv(file, index=False)
+    
     print('CSV Done')
 
     print('Uploading')
+    
     url = f"{WAZI_ENDPOINT}/api/v1/datasets/{DATASET_ID}/upload/"
 
     headers = {'authorization': f"Token {WAZI_TOKEN}"}
@@ -72,6 +70,7 @@ def upload():
     wazi_r = requests.post(url, headers=headers, data=payload, files=files)
     wazi_r.raise_for_status()
 
+    print('Done')
 
 async def run_program(url, query, session):
     try:
@@ -256,12 +255,8 @@ async def run_program(url, query, session):
 
                 df = pd.DataFrame(council_winners, columns=columns)
 
-                print(df)
-
                 dff = pd.merge(munis_df, df, left_on='MunicipalityID', right_on='fklMunicipalityID', how='inner')
 
-                print(dff)
-                                  
                 dff['ProvinceID'] = dff['ProvinceID'].astype(str)
                 dff['ProvinceID'] = dff['ProvinceID'].map({'9': 'WC', '8': 'NW', '7':'LIM', '6':'NC','5':'MP', '4':'KZN', '3':'GT','2':'FS', '1':'EC'})
 
@@ -269,9 +264,6 @@ async def run_program(url, query, session):
                 totalCouncils = dff.groupby(['ProvinceID'])['bHung'].count()
 
                 dff2 = pd.merge(hungCouncils, totalCouncils, left_on='ProvinceID', right_on='ProvinceID', how='inner')
-
-
-                print(dff2)
 
                 for index, row in dff2.iterrows():
                     print(row['bHung_x'])
