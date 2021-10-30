@@ -38,6 +38,7 @@ wards_df = pd.read_csv('./delimitations/Wards.csv')
 Wards = wards_df.values.tolist()
 munis_df = pd.read_csv('./delimitations/Munis.csv')
 Munis = munis_df.values.tolist()
+Provinces = ['EC','FS','GT','KZN','MP','NC','LIM','NW','WC']
 
 async def get_api_data(url, query, session):
     api_url = IEC_API + url + str(query)
@@ -127,7 +128,7 @@ async def run_program(url, query, session):
             if(RESET_DATASET == 'reset'):
                 Results.append(
                     {
-                        'Geography': 'Reset',
+                        'Geography': 'None',
                         'Party': '-',
                         'Count': 0
                     }
@@ -159,7 +160,7 @@ async def run_program(url, query, session):
             if(RESET_DATASET == 'reset'):
                 Results.append(
                     {
-                        'Geography': 'Reset',
+                        'Geography': 'None',
                         'Contents': '-'
                     }
                 )
@@ -189,7 +190,7 @@ async def run_program(url, query, session):
             if(RESET_DATASET == 'reset'):
                 Results.append(
                     {
-                        'Geography': 'Reset',
+                        'Geography': 'None',
                         'Party': '-',
                         'Count': 0
                     }
@@ -217,14 +218,102 @@ async def run_program(url, query, session):
         
         if(IEC_ENDPOINT == 'hung_councils'):
 
-            # {
-            #     'Geography':
-            #     'Councils':
-            #     'Count':
-            # }
 
-            return
+            if(RESET_DATASET == 'reset'):
 
+                Results.append(
+                    {
+                        'Geography': 'None',
+                        'Councils': '-',
+                        'Count': 0
+                    }
+                )
+                upload()
+
+            else:
+
+                parties = []
+                partiesquery =  "SELECT * FROM PCR_Party"
+                cursor = conn.cursor()
+                cursor.execute(partiesquery)
+
+                for row in cursor:
+                    parties.append(row)
+
+
+                sqlquery =  "SELECT * FROM LED_GIS_CouncilWinners WHERE fklEEId = " + ELECTORAL_EVENT_ID
+                cursor = conn.cursor()
+                cursor.execute(sqlquery)
+
+                council_winners = []
+
+                for row in cursor:
+                    row_to_list = [elem for elem in row]
+                    council_winners.append(row_to_list)
+
+
+                columns = ['pklCouncilWinnerID', 'fklEEID', 'fklMunicipalityID', 'fklPartyID', 'fklLeadingPartyID', 'fklMajorityPartyID', 'lCouncilSeatsAvailable', 'lTotalPartySeatsWon', 'bDraw', 'bHung']
+
+                df = pd.DataFrame(council_winners, columns=columns)
+
+                print(df)
+
+                dff = pd.merge(munis_df, df, left_on='MunicipalityID', right_on='fklMunicipalityID', how='inner')
+
+                print(dff)
+                                  
+                dff['ProvinceID'] = dff['ProvinceID'].astype(str)
+                dff['ProvinceID'] = dff['ProvinceID'].map({'9': 'WC', '8': 'NW', '7':'LIM', '6':'NC','5':'MP', '4':'KZN', '3':'GT','2':'FS', '1':'EC'})
+
+                hungCouncils = dff.groupby(['ProvinceID'])['bHung'].sum()
+                totalCouncils = dff.groupby(['ProvinceID'])['bHung'].count()
+
+                dff2 = pd.merge(hungCouncils, totalCouncils, left_on='ProvinceID', right_on='ProvinceID', how='inner')
+
+
+                print(dff2)
+
+                for index, row in dff2.iterrows():
+                    print(row['bHung_x'])
+
+
+                    Results.append(
+                        {
+                            'Geography': index,
+                            'Councils': 'Hung',
+                            'Count': row['bHung_x']
+                        }
+                    )
+                    Results.append(
+                        {
+                            'Geography': index,
+                            'Councils': 'Outright Majority',
+                            'Count': row['bHung_y'] - row['bHung_x']
+                        }
+                    )
+
+                
+        ##### 
+        ## COUNCILS WON BY PARTY (1385)
+        #####
+
+        if(IEC_ENDPOINT == 'councils_won_by_party'):
+
+
+            if(RESET_DATASET == 'reset'):
+
+                return
+
+            else:
+
+                # {
+                #     'Geography':
+                #     'Party Name':
+                #     'Count':
+                # }
+
+                return
+                
             
 
 
@@ -291,7 +380,7 @@ async def main():
             if(RESET_DATASET == 'reset'):
                 Results.append(
                     {
-                        'Geography': 'Reset',
+                        'Geography': 'None',
                         'Party': '-',
                         'Count': 0
                     }
@@ -311,7 +400,7 @@ async def main():
             if(RESET_DATASET == 'reset'):
                 Results.append(
                     {
-                        'Geography': 'Reset',
+                        'Geography': 'None',
                         'Voter Turnout': '-',
                         'Count': 0
                     }
@@ -355,12 +444,22 @@ async def main():
             upload()
 
         ##### 
-        ## HUNG OUTRIGHT MAJORITY COUNCILS (1384)
+        ## HUNG / OUTRIGHT MAJORITY COUNCILS (1384)
         #####
 
         if(IEC_ENDPOINT == 'hung_councils'):
             await run_program('','',session)
             upload()
+
+        ##### 
+        ## COUNCILS WON BY PARTY (1385)
+        #####
+
+        if(IEC_ENDPOINT == 'councils_won_by_party'):
+            await run_program('','',session)
+            # upload()
+        
+    
 
         ##### 
         ## SEATS WON (1383)

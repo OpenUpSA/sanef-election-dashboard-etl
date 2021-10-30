@@ -7,7 +7,6 @@
 - voter_turnout - 1386
 - ward_votes_by_candidate - 1379
 - ward_councillor_elected - 1382
-
 - pr_votes_by_party - 1380
-- hung_councils - 1384
 - seats_won - 1383
+- hung_councils - 1384
