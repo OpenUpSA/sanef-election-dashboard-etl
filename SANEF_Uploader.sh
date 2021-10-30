@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -euxo pipefail
+set -euo pipefail
 
 python SANEF_Uploader.py \
        $WAZI_ENDPOINT \

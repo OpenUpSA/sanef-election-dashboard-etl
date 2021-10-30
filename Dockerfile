@@ -4,11 +4,14 @@ ENV POETRY_VIRTUALENVS_CREATE false
 ENV PIP_NO_CACHE_DIR off
 ENV PIP_DISABLE_PIP_VERSION_CHECK on
 ENV PYTHONUNBUFFERED 1
+ENV ACCEPT_EULA Y
 
 RUN set -ex; \
+  curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -; \
+  curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/mssql-release.list; \
   apt-get update; \
   # dependencies for building Python packages \
-  apt-get install -y build-essential tdsodbc unixodbc-dev unixodbc-bin; \
+  apt-get install -y build-essential unixodbc unixodbc-dev msodbcsql17; \
   # cleaning up unused files \
   apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
   rm -rf /var/lib/apt/lists/*
