@@ -22,3 +22,4 @@ Run
 - seats_won - 1383
 - hung_councils - 1384
 - councils_won_by_party - 1385
+- list_of_hung_councils - 1424

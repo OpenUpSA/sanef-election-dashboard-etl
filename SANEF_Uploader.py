@@ -48,17 +48,11 @@ async def get_api_data(url, query, session):
     return response_json
 
 def upload():
-    print('Saving to CSV...')
-
     time = datetime.now().strftime("%d%m%Y-%H%M")
     file = IEC_ENDPOINT + '.' + time + '.csv'
 
     Results_df = pd.DataFrame(Results)
     Results_df.to_csv(file, index=False)
-    
-    print('CSV Done')
-
-    print('Uploading')
     
     url = f"{WAZI_ENDPOINT}/api/v1/datasets/{DATASET_ID}/upload/"
 
@@ -272,6 +266,59 @@ async def run_program(url, query, session):
                         }
                     )
 
+
+        ##### 
+        ## LIST OF HUNG COUNCILS (1424)
+        #####
+        
+        if(IEC_ENDPOINT == 'list_of_hung_councils'):
+
+
+            if(RESET_DATASET == 'reset'):
+
+                Results.append(
+                    {
+                        'Geography': 'None',
+                        'Contents': '-'
+                    }
+                )
+                upload()
+
+            else:
+                
+                # EC,<ul><li><a href = https://sanef-local-gov.openup.org.za/#geo:NMA >NMA </a> </li></ul>
+                
+                sqlquery =  "SELECT * FROM LED_GIS_CouncilWinners WHERE bHung = 1 AND fklEEId = " + ELECTORAL_EVENT_ID
+                cursor = conn.cursor()
+                cursor.execute(sqlquery)
+
+                columns = ['pklCouncilWinnerID', 'fklEEID', 'fklMunicipalityID', 'fklPartyID', 'fklLeadingPartyID', 'fklMajorityPartyID', 'lCouncilSeatsAvailable', 'lTotalPartySeatsWon', 'bDraw', 'bHung']
+
+                df = pd.DataFrame([tuple(t) for t in cursor], columns=columns)
+
+                dff = pd.merge(munis_df, df, left_on='MunicipalityID', right_on='fklMunicipalityID', how='inner')
+
+                dff['ProvinceID'] = dff['ProvinceID'].astype(str)
+                dff['ProvinceID'] = dff['ProvinceID'].map({'9': 'WC', '8': 'NW', '7':'LIM', '6':'NC','5':'MP', '4':'KZN', '3':'GT','2':'FS', '1':'EC'})
+
+                hung_councils = dff.groupby(['ProvinceID'])
+
+               
+                for geo, group in hung_councils:
+
+                    contents = '<ul>'
+                    for index, row in group.iterrows():
+                        contents += '<li><a href = https://sanef-local-gov.openup.org.za/#geo:' + row['Municipality'] + '>' + row['Municipality'] + ' - ' + row['MunicipalityName'] + ' </a> </li>'
+
+                    contents += '</ul>'
+
+                    Results.append(
+                        {
+                            'Geography': geo,
+                            'Contents': contents
+                        }
+                    )
+
                 
         ##### 
         ## COUNCILS WON BY PARTY (1385)
@@ -478,6 +525,14 @@ async def main():
         #####
 
         if(IEC_ENDPOINT == 'councils_won_by_party'):
+            await run_program('','',session)
+            upload()
+
+        ##### 
+        ## LIST OF HUNG COUNCILS (1424)
+        #####
+
+        if(IEC_ENDPOINT == 'list_of_hung_councils'):
             await run_program('','',session)
             upload()
 
