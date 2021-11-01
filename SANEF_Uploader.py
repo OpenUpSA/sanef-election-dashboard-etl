@@ -44,7 +44,7 @@ async def get_api_data(url, query, session):
         print(f"HTTP error occurred: {http_err}")
     except Exception as err:
         print(f"An error ocurred: {err}")
-    response_json = await response.json()
+    response_json = await response.json(content_type=None)
     return response_json
 
 def upload():
@@ -284,8 +284,6 @@ async def run_program(url, query, session):
 
             else:
                 
-                # EC,<ul><li><a href = https://sanef-local-gov.openup.org.za/#geo:NMA >NMA </a> </li></ul>
-                
                 sqlquery =  "SELECT * FROM LED_GIS_CouncilWinners WHERE bHung = 1 AND fklEEId = " + ELECTORAL_EVENT_ID
                 cursor = conn.cursor()
                 cursor.execute(sqlquery)
@@ -388,6 +386,8 @@ async def run_program(url, query, session):
         
         if(IEC_ENDPOINT == 'seats_won'):
 
+            
+
             if(RESET_DATASET == 'reset'):
                 Results.append(
                     {
@@ -401,35 +401,63 @@ async def run_program(url, query, session):
                 
             else:
 
-                sqlquery =  "SELECT * FROM LED_GIS_Display_Municipal WHERE fklEEId = " + ELECTORAL_EVENT_ID
-                cursor = conn.cursor()
-                cursor.execute(sqlquery)
+                status = await asyncio.gather(*[run_side_program('/api/v1/ResultsProgress?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(muni[0]) + '&MunicipalityID=' + str(muni[1]), session, muni[1]) for muni in Munis])
 
-                for row in cursor:
+                for muni in status:
+                    if(muni != None):
+                        if(muni['status'] == True):
 
-                    muni = munis_df.loc[munis_df.MunicipalityID == row[2]]['Municipality'].values[0]
+                            sqlquery =  "SELECT * FROM LED_GIS_Display_Municipal WHERE fklMunicipalityId = " + str(muni['muni']) + " AND fklEEId = " + ELECTORAL_EVENT_ID
+                            cursor = conn.cursor()
+                            cursor.execute(sqlquery)
 
-                    Results.append(
-                        {
-                            'Geography': muni,
-                            'Party Name': row[4],
-                            'Seat Type': 'Ward',
-                            'Count': row[9]
-                        }
-                    )
-                    Results.append(
-                        {
-                            'Geography': muni,
-                            'Party Name': row[4],
-                            'Seat Type': 'PR',
-                            'Count': row[13]
-                        }
-                    )
+                            for row in cursor:
+
+                                muni = munis_df.loc[munis_df.MunicipalityID == row[2]]['Municipality'].values[0]
+                                
+                                Results.append(
+                                    {
+                                        'Geography': muni,
+                                        'Party Name': row[4],
+                                        'Seat Type': 'Ward',
+                                        'Count': row[9]
+                                    }
+                                )
+                                Results.append(
+                                    {
+                                        'Geography': muni,
+                                        'Party Name': row[4],
+                                        'Seat Type': 'PR',
+                                        'Count': row[13]
+                                    }
+                                )
+
+
+
+
+
 
             
     except Exception as err:
         print(f"Exception occured: {err}")
         pass
+
+
+async def run_side_program(url, query, session, muni):
+    try:
+        response = await get_api_data(url, query, session)
+        if(response != None):
+            return {
+                'muni': muni,
+                'status': response['SeatCalculationCompleted']
+            }
+
+
+
+    except Exception as err:
+        print(f"Exception occured: {err}")
+        pass
+
 
 
     
