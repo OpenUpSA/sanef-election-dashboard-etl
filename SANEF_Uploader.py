@@ -22,7 +22,7 @@ DB_PASSWORD = sys.argv[9]
 RESET_DATASET = sys.argv[10]
 
 IEC_API = "https://api.elections.org.za"
-ELECTORAL_EVENT_ID = '402'
+ELECTORAL_EVENT_ID = '1091'
 
 conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=' + DB_SERVER + ';DATABASE=' + DB + ';UID=' + DB_USERNAME + ';PWD=' + DB_PASSWORD)
 
@@ -34,7 +34,6 @@ wards_df = pd.read_csv('./delimitations/Wards.csv')
 Wards = wards_df.values.tolist()
 munis_df = pd.read_csv('./delimitations/Munis.csv')
 Munis = munis_df.values.tolist()
-Provinces = ['EC','FS','GT','KZN','MP','NC','LIM','NW','WC']
 
 async def get_api_data(url, query, session):
     api_url = IEC_API + url + str(query)
