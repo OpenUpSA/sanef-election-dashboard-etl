@@ -52,18 +52,16 @@ def upload():
     file = IEC_ENDPOINT + '.' + time + '.csv'
 
     Results_df = pd.DataFrame(Results)
-    Results_df.to_csv(file, index=False)
+    Results_df.to_csv('datasets/' + file, index=False)
     
     url = f"{WAZI_ENDPOINT}/api/v1/datasets/{DATASET_ID}/upload/"
 
     headers = {'authorization': f"Token {WAZI_TOKEN}"}
-    files = {'file': open(file, 'rb')}
+    files = {'file': open('datasets/' + file, 'rb')}
     payload = {'update': False, 'overwrite': True}
 
     wazi_r = requests.post(url, headers=headers, data=payload, files=files)
     wazi_r.raise_for_status()
-
-    print('Done')
 
 async def run_program(url, query, session):
     try:
@@ -220,7 +218,7 @@ async def run_program(url, query, session):
                         'Count': 0
                     }
                 )
-                upload()
+                
 
             else:
 
@@ -282,7 +280,7 @@ async def run_program(url, query, session):
                         'Contents': '-'
                     }
                 )
-                upload()
+                
 
             else:
                 
@@ -370,8 +368,6 @@ async def run_program(url, query, session):
 
                 councils_by_party = dff.groupby(['ProvinceID','sPartyName'])
 
-
-
                 for geo, group in councils_by_party:
 
                     Results.append(
@@ -401,7 +397,7 @@ async def run_program(url, query, session):
                         'Count': 0
                     }
                 )
-                upload()
+                
                 
             else:
 
