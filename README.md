@@ -21,3 +21,4 @@ Run
 - pr_votes_by_party - 1380
 - seats_won - 1383
 - hung_councils - 1384
+- councils_won_by_party - 1385

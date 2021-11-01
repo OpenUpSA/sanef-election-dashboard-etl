@@ -230,15 +230,6 @@ async def run_program(url, query, session):
 
             else:
 
-                parties = []
-                partiesquery =  "SELECT * FROM PCR_Party"
-                cursor = conn.cursor()
-                cursor.execute(partiesquery)
-
-                for row in cursor:
-                    parties.append(row)
-
-
                 sqlquery =  "SELECT * FROM LED_GIS_CouncilWinners WHERE fklEEId = " + ELECTORAL_EVENT_ID
                 cursor = conn.cursor()
                 cursor.execute(sqlquery)
@@ -265,8 +256,6 @@ async def run_program(url, query, session):
                 dff2 = pd.merge(hungCouncils, totalCouncils, left_on='ProvinceID', right_on='ProvinceID', how='inner')
 
                 for index, row in dff2.iterrows():
-                    print(row['bHung_x'])
-
 
                     Results.append(
                         {
@@ -293,18 +282,60 @@ async def run_program(url, query, session):
 
             if(RESET_DATASET == 'reset'):
 
-                return
+                Results.append(
+                    {
+                        'Geography': 'None',
+                        'Party Name': '-',
+                        'Count': 0
+                    }
+                )
 
             else:
 
-                # {
-                #     'Geography':
-                #     'Party Name':
-                #     'Count':
-                # }
+                partiesquery =  "SELECT * FROM PCR_Party"
+                cursor = conn.cursor()
+                cursor.execute(partiesquery)
 
-                return
-                
+                columns = ['pklPartyID','sPartyName','sPartyAbbr']
+
+                parties_df = pd.DataFrame([tuple(t) for t in cursor], columns=columns) 
+
+                sqlquery =  "SELECT * FROM LED_GIS_CouncilWinners WHERE bHung = 0 AND fklEEId = " + ELECTORAL_EVENT_ID
+                cursor = conn.cursor()
+                cursor.execute(sqlquery)
+
+                council_winners = []
+
+                for row in cursor:
+                    row_to_list = [elem for elem in row]
+                    council_winners.append(row_to_list)
+
+
+                columns = ['pklCouncilWinnerID', 'fklEEID', 'fklMunicipalityID', 'fklPartyID', 'fklLeadingPartyID', 'fklMajorityPartyID', 'lCouncilSeatsAvailable', 'lTotalPartySeatsWon', 'bDraw', 'bHung']
+
+                df = pd.DataFrame(council_winners, columns=columns)
+
+                dff = pd.merge(munis_df, df, left_on='MunicipalityID', right_on='fklMunicipalityID', how='inner')
+                dff = pd.merge(parties_df,dff, left_on='pklPartyID', right_on='fklPartyID', how='inner')
+
+                dff['ProvinceID'] = dff['ProvinceID'].astype(str)
+                dff['ProvinceID'] = dff['ProvinceID'].map({'9': 'WC', '8': 'NW', '7':'LIM', '6':'NC','5':'MP', '4':'KZN', '3':'GT','2':'FS', '1':'EC'})
+
+                councils_by_party = dff.groupby(['ProvinceID','sPartyName'])
+
+
+
+                for geo, group in councils_by_party:
+
+                    Results.append(
+                        {
+                            'Geography': geo[0],
+                            'Party': geo[1],
+                            'Count': group.count()['sPartyName']
+                        }
+                    )
+
+
             
 
 
@@ -448,9 +479,7 @@ async def main():
 
         if(IEC_ENDPOINT == 'councils_won_by_party'):
             await run_program('','',session)
-            # upload()
-        
-    
+            upload()
 
         ##### 
         ## SEATS WON (1383)
