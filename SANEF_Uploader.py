@@ -93,21 +93,20 @@ async def run_program(url, query, session):
 
             response = await get_api_data(url, query, session)
 
-            if(response['bResultsComplete'] == True):
-                Results.append(
-                    {
-                        'Geography': response['WardID'],
-                        'Voter Turnout': "Didn't vote",
-                        'Count': response['RegisteredVoters'] - response['TotalVotesCast'],
-                    }
-                )
-                Results.append(
-                    {
-                        'Geography': response['WardID'],
-                        'Voter Turnout': 'Voted',
-                        'Count': response['TotalVotesCast'],
-                    }
-                )
+            Results.append(
+                {
+                    'Geography': response['WardID'],
+                    'Voter Turnout': "Didn't vote",
+                    'Count': response['RegisteredVoters'] - response['TotalVotesCast'],
+                }
+            )
+            Results.append(
+                {
+                    'Geography': response['WardID'],
+                    'Voter Turnout': 'Voted',
+                    'Count': response['TotalVotesCast'],
+                }
+            )
 
         #####
         ## WARD: VOTES BY CANDIDATE (1379)
@@ -137,23 +136,23 @@ async def run_program(url, query, session):
                 status = await asyncio.gather(*[run_side_program('ward_votes_by_candidate','/api/v1/LGEBallotResults?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(ward[0]) + '&MunicipalityID=' + str(ward[1]) + '&WardID=' + str(ward[2]), session, ward[2]) for ward in completed_wards])
 
                 for ward in status:
-                    if(ward != None):
 
-                        if(ward['bResultsComplete'] == True):
-                            
-                            sqlquery = "SELECT * FROM LED_GIS_Display_Ward_WardCandidates WHERE fklWardId = " + str(ward['WardID']) + " AND fklEEId = " + ELECTORAL_EVENT_ID
-                            cursor = conn.cursor()
-                            cursor.execute(sqlquery)
 
-                            for row in cursor:
+                    sqlquery = "SELECT * FROM LED_GIS_Display_Ward_WardCandidates WHERE fklWardId = " + str(ward['WardID']) + " AND fklEEId = " + ELECTORAL_EVENT_ID
+                    cursor = conn.cursor()
+                    cursor.execute(sqlquery)
 
-                                Results.append(
-                                    {
-                                        'Geography': row[3],
-                                        'Party': row[9] + ' - ' + row[5],
-                                        'Count': row[10]
-                                    }
-                                )    
+                    for row in cursor:
+
+                        print(row)
+
+                        # Results.append(
+                        #     {
+                        #         'Geography': row[3],
+                        #         'Party': row[9] + ' - ' + row[5],
+                        #         'Count': row[10]
+                        #     }
+                        # )    
                 
 
 
@@ -389,49 +388,10 @@ async def run_program(url, query, session):
 
         if(IEC_ENDPOINT == 'seats_won'):
 
-            if(RESET_DATASET == 'reset'):
-                Results.append(
-                    {
-                        'Geography': 'None',
-                        'Party Name': '-',
-                        'Seat Type': 'Ward',
-                        'Count': 0
-                    }
-                )
+            response = await get_api_data(url, query, session)
 
+            return response
 
-            else:
-
-                status = await asyncio.gather(*[run_side_program('seats_won','/api/v1/ResultsProgress?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(muni[0]) + '&MunicipalityID=' + str(muni[1]), session, muni[1]) for muni in Munis])
-
-                for muni in status:
-                    if(muni != None):
-                        if(muni['status'] == True):
-
-                            sqlquery =  "SELECT * FROM LED_GIS_Display_Municipal WHERE fklMunicipalityId = " + str(muni['muni']) + " AND fklEEId = " + ELECTORAL_EVENT_ID
-                            cursor = conn.cursor()
-                            cursor.execute(sqlquery)
-
-                            for row in cursor:
-
-                                muni = munis_df.loc[munis_df.MunicipalityID == row[2]]['Municipality'].values[0]
-
-                                Results.append(
-                                    {
-                                        'Geography': muni,
-                                        'Party Name': row[4],
-                                        'Seat Type': 'Ward',
-                                        'Count': row[9]
-                                    }
-                                )
-                                Results.append(
-                                    {
-                                        'Geography': muni,
-                                        'Party Name': row[4],
-                                        'Seat Type': 'PR',
-                                        'Count': row[13]
-                                    }
-                                )
 
 
             
@@ -603,8 +563,49 @@ async def main():
         #####
 
         if(IEC_ENDPOINT == 'seats_won'):
-            await run_program('','',session)
-            upload()
+
+            if(RESET_DATASET == 'reset'):
+                Results.append(
+                    {
+                        'Geography': 'None',
+                        'Party Name': '-',
+                        'Seat Type': 'Ward',
+                        'Count': 0
+                    }
+                )
+
+            else:
+
+                response = await asyncio.gather(*[run_program('/api/v1/LGESeatCalculationResults?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(muni[0]) + '&MunicipalityID=' + str(muni[1]), session) for muni in Munis])
+
+
+                for muni in response:
+                    if muni is not None:
+                        for party in muni['PartyResults']:
+
+                            munigeo = munis_df.loc[munis_df.MunicipalityID == muni['MunicipalityID']]['Municipality'].values[0]
+
+                            Results.append(
+                                {
+                                    'Geography': munigeo,
+                                    'Party Name': party['Name'],
+                                    'Seat Type': 'Ward',
+                                    'Count': party['WardSeats']
+                                }
+                            )
+                            Results.append(
+                                {
+                                    'Geography': munigeo,
+                                    'Party Name': party['Name'],
+                                    'Seat Type': 'PR',
+                                    'Count': party['PRSeats']
+                                }
+                            )         
+
+
+
+                
+                upload()
 
 
 
