@@ -469,9 +469,52 @@ async def main():
 
             else:
 
-                return
+                # CHECK COMPLETED WARDS
+               
+                sqlquery =  "SELECT fklMunicipalityID, pkfklWardID, pkfklCandidateID, PCR_Candidates.sIDNo, PCR_Candidates.sSurname, PCR_Candidates.sInitials, PCR_Candidates.sFullName, PCR_Party.sPartyName FROM LED_GIS_WardWinners INNER JOIN PCR_Candidates ON LED_GIS_WardWinners.pkfklCandidateID=PCR_Candidates.pklCandidateID INNER JOIN PCR_Party ON LED_GIS_WardWinners.pkfklPartyID=PCR_Party.pklPartyID WHERE pkfklEEID =" + str(ELECTORAL_EVENT_ID)
+                cursor = conn.cursor()
+                cursor.execute(sqlquery)
 
-                # upload()
+                completed_wards = []
+
+                for row in cursor:
+                    munigeo = munis_df.loc[munis_df.MunicipalityID == row[0]]['ProvinceID'].values[0]
+                    completed_wards.append([munigeo,row[0],row[1]])
+                
+                # END COMPLETED WARDS CHECK
+
+                for ward in completed_wards:
+                    sqlquery =  "SELECT * FROM LED_GIS_Display_Ward WHERE fklWardId = " + str(ward[2]) + " AND fklEEId = " + ELECTORAL_EVENT_ID
+                    cursor = conn.cursor()
+                    cursor.execute(sqlquery)
+
+                    total_ward_votes = 0
+                    total_pr_votes = 0
+                    registered_voters = 0 
+
+                    for row in cursor:
+                        registered_voters = row[13]
+                        total_ward_votes = total_ward_votes + row[9]
+                        total_pr_votes = total_pr_votes + row[10]
+                    
+                    ward_votes_voted = {
+                        'Geography': row[2],
+                        'Voter Turnout': 'Voted',
+                        'Count': max(total_ward_votes,total_pr_votes)
+                    }
+
+                    ward_votes_didnt_vote = {
+                        'Geography': row[2],
+                        'Voter Turnout': "Didn't Vote",
+                        'Count': registered_voters - (max(total_ward_votes,total_pr_votes))
+                    }
+
+                    Results.append(ward_votes_voted)
+                    Results.append(ward_votes_didnt_vote)
+
+                
+
+                upload()
 
         #####
         ## WARD: VOTES BY CANDIDATE (1379)
