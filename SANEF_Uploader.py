@@ -104,39 +104,36 @@ async def run_program(url, query, session):
 
             else:
 
-                return
+                # CHECK COMPLETED WARDS
+               
+                sqlquery =  "SELECT fklMunicipalityID, pkfklWardID, pkfklCandidateID, PCR_Candidates.sIDNo, PCR_Candidates.sSurname, PCR_Candidates.sInitials, PCR_Candidates.sFullName, PCR_Party.sPartyName FROM LED_GIS_WardWinners INNER JOIN PCR_Candidates ON LED_GIS_WardWinners.pkfklCandidateID=PCR_Candidates.pklCandidateID INNER JOIN PCR_Party ON LED_GIS_WardWinners.pkfklPartyID=PCR_Party.pklPartyID WHERE pkfklEEID =" + str(ELECTORAL_EVENT_ID)
+                cursor = conn.cursor()
+                cursor.execute(sqlquery)
 
-                # councillors_elected = await asyncio.gather(*[run_side_program('councillors_elected','/api/v1/CouncilorsByEvent?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(province), session, str(province)) for province in [1]])
+                completed_wards = []
 
-                # completed_wards = []
+                for row in cursor:
+                    munigeo = munis_df.loc[munis_df.MunicipalityID == row[0]]['ProvinceID'].values[0]
+                    completed_wards.append([munigeo,row[0],row[1]])
+                
+                # END COMPLETED WARDS CHECK
 
-                # for province in councillors_elected:
-                #     for ward in province:
-                #         completed_wards.append([ward['ProvinceID'],ward['MunicipalityID'],ward['WardID']])
 
-                # status = await asyncio.gather(*[run_side_program('ward_votes_by_candidate','/api/v1/LGEBallotResults?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(ward[0]) + '&MunicipalityID=' + str(ward[1]) + '&WardID=' + str(ward[2]), session, ward[2]) for ward in completed_wards])
-
-                # for ward in status:
+                for ward in completed_wards:
                     
-                #     print(ward)
+                    sqlquery = "SELECT * FROM LED_GIS_Display_Ward_WardCandidates WHERE fklWardId = " + str(ward[2]) + " AND fklEEId = " + str(ELECTORAL_EVENT_ID)
+                    cursor = conn.cursor()
+                    cursor.execute(sqlquery)
 
-                #     sqlquery = "SELECT * FROM LED_GIS_Display_Ward_WardCandidates WHERE fklWardId = " + str(ward['WardID']) + " AND fklEEId = " + str(ELECTORAL_EVENT_ID)
-                #     cursor = conn.cursor()
-                #     cursor.execute(sqlquery)
+                    for row in cursor:
 
-                #     print(cursor)
-
-                    # for row in cursor:
-
-                    #     print(row)
-
-                        # Results.append(
-                        #     {
-                        #         'Geography': row[3],
-                        #         'Party': row[9] + ' - ' + row[5],
-                        #         'Count': row[10]
-                        #     }
-                        # )    
+                        Results.append(
+                            {
+                                'Geography': row[3],
+                                'Party': row[9] + ' - ' + row[5],
+                                'Count': row[10]
+                            }
+                        )    
                 
 
 
@@ -511,8 +508,6 @@ async def main():
 
                     Results.append(ward_votes_voted)
                     Results.append(ward_votes_didnt_vote)
-
-                
 
                 upload()
 
