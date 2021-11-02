@@ -75,38 +75,17 @@ async def run_program(url, query, session):
 
             response = await get_api_data(url, query, session)
 
-            if(response['bResultsComplete'] == True):
-                for result in response['PartyBallotResults']:
-                    Results.append(
-                        {
-                            'Geography': response['WardID'],
-                            'Party': result['Name'],
-                            'Count': result['TotalValidVotes'],
-                        }
-                    )
+            for result in response['PartyBallotResults']:
+                Results.append(
+                    {
+                        'Geography': response['WardID'],
+                        'Party': result['Name'],
+                        'Count': result['TotalValidVotes'],
+                    }
+                )
 
-        #####
-        ## VOTER TURNOUT (1386)
-        #####
-
-        if(IEC_ENDPOINT == 'voter_turnout'):
-
-            response = await get_api_data(url, query, session)
-
-            Results.append(
-                {
-                    'Geography': response['WardID'],
-                    'Voter Turnout': "Didn't vote",
-                    'Count': response['RegisteredVoters'] - response['TotalVotesCast'],
-                }
-            )
-            Results.append(
-                {
-                    'Geography': response['WardID'],
-                    'Voter Turnout': 'Voted',
-                    'Count': response['TotalVotesCast'],
-                }
-            )
+       
+        
 
         #####
         ## WARD: VOTES BY CANDIDATE (1379)
@@ -125,26 +104,31 @@ async def run_program(url, query, session):
 
             else:
 
-                councillors_elected = await asyncio.gather(*[run_side_program('councillors_elected','/api/v1/CouncilorsByEvent?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(province), session, str(province)) for province in [1]])
+                return
 
-                completed_wards = []
+                # councillors_elected = await asyncio.gather(*[run_side_program('councillors_elected','/api/v1/CouncilorsByEvent?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(province), session, str(province)) for province in [1]])
 
-                for province in councillors_elected:
-                    for ward in province:
-                        completed_wards.append([ward['ProvinceID'],ward['MunicipalityID'],ward['WardID']])
+                # completed_wards = []
 
-                status = await asyncio.gather(*[run_side_program('ward_votes_by_candidate','/api/v1/LGEBallotResults?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(ward[0]) + '&MunicipalityID=' + str(ward[1]) + '&WardID=' + str(ward[2]), session, ward[2]) for ward in completed_wards])
+                # for province in councillors_elected:
+                #     for ward in province:
+                #         completed_wards.append([ward['ProvinceID'],ward['MunicipalityID'],ward['WardID']])
 
-                for ward in status:
+                # status = await asyncio.gather(*[run_side_program('ward_votes_by_candidate','/api/v1/LGEBallotResults?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(ward[0]) + '&MunicipalityID=' + str(ward[1]) + '&WardID=' + str(ward[2]), session, ward[2]) for ward in completed_wards])
 
+                # for ward in status:
+                    
+                #     print(ward)
 
-                    sqlquery = "SELECT * FROM LED_GIS_Display_Ward_WardCandidates WHERE fklWardId = " + str(ward['WardID']) + " AND fklEEId = " + ELECTORAL_EVENT_ID
-                    cursor = conn.cursor()
-                    cursor.execute(sqlquery)
+                #     sqlquery = "SELECT * FROM LED_GIS_Display_Ward_WardCandidates WHERE fklWardId = " + str(ward['WardID']) + " AND fklEEId = " + str(ELECTORAL_EVENT_ID)
+                #     cursor = conn.cursor()
+                #     cursor.execute(sqlquery)
 
-                    for row in cursor:
+                #     print(cursor)
 
-                        print(row)
+                    # for row in cursor:
+
+                    #     print(row)
 
                         # Results.append(
                         #     {
@@ -449,13 +433,20 @@ async def main():
 
             else:
 
-                councillors_elected = await asyncio.gather(*[run_side_program('councillors_elected','/api/v1/CouncilorsByEvent?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(province), session, str(province)) for province in [1]])
+                # CHECK COMPLETED WARDS
+               
+                sqlquery =  "SELECT fklMunicipalityID, pkfklWardID, pkfklCandidateID, PCR_Candidates.sIDNo, PCR_Candidates.sSurname, PCR_Candidates.sInitials, PCR_Candidates.sFullName, PCR_Party.sPartyName FROM LED_GIS_WardWinners INNER JOIN PCR_Candidates ON LED_GIS_WardWinners.pkfklCandidateID=PCR_Candidates.pklCandidateID INNER JOIN PCR_Party ON LED_GIS_WardWinners.pkfklPartyID=PCR_Party.pklPartyID WHERE pkfklEEID =" + str(ELECTORAL_EVENT_ID)
+                cursor = conn.cursor()
+                cursor.execute(sqlquery)
 
                 completed_wards = []
 
-                for province in councillors_elected:
-                    for ward in province:
-                        completed_wards.append([ward['ProvinceID'],ward['MunicipalityID'],ward['WardID']])
+                for row in cursor:
+                    munigeo = munis_df.loc[munis_df.MunicipalityID == row[0]]['ProvinceID'].values[0]
+                    completed_wards.append([munigeo,row[0],row[1]])
+                
+                # END COMPLETED WARDS CHECK
+
 
                 await asyncio.gather(*[run_program('/api/v1/LGEBallotResults?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(ward[0]) + '&MunicipalityID=' + str(ward[1]) + '&WardID=' + str(ward[2]), session) for ward in completed_wards])
                 upload()
@@ -478,19 +469,9 @@ async def main():
 
             else:
 
-                councillors_elected = await asyncio.gather(*[run_side_program('councillors_elected','/api/v1/CouncilorsByEvent?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(province), session, str(province)) for province in [1]])
+                return
 
-                completed_wards = []
-
-                for province in councillors_elected:
-                    i = 0
-                    for ward in province:
-                        i = i + 1
-                        completed_wards.append([ward['ProvinceID'],ward['MunicipalityID'],ward['WardID']])
-
-
-                await asyncio.gather(*[run_program('/api/v1/LGEBallotResults?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(ward[0]) + '&MunicipalityID=' + str(ward[1]) + '&WardID=' + str(ward[2]), session) for ward in completed_wards])
-                upload()
+                # upload()
 
         #####
         ## WARD: VOTES BY CANDIDATE (1379)
@@ -505,18 +486,18 @@ async def main():
         #####
 
         if(IEC_ENDPOINT == 'ward_councillor_elected'):
-                if(RESET_DATASET == 'reset'):
-                    Results.append(
-                        {
-                            'Geography': 'None',
-                            'Contents': '-'
-                        }
-                    )
-                    upload()
+            if(RESET_DATASET == 'reset'):
+                Results.append(
+                    {
+                        'Geography': 'None',
+                        'Contents': '-'
+                    }
+                )
+                upload()
 
-                else:
-                    await asyncio.gather(*[run_program('/api/v1/CouncilorsByEvent?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(province), session) for province in [1]])
-                    upload()
+            else:
+                await asyncio.gather(*[run_program('/api/v1/CouncilorsByEvent?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(province), session) for province in [1]])
+                upload()
 
         #####
         ## PR VOTES BY PARTY (1380)
