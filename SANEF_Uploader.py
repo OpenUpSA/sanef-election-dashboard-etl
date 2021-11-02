@@ -93,10 +93,6 @@ async def run_program(url, query, session):
 
             response = await get_api_data(url, query, session)
 
-
-
-
-
             if(response['bResultsComplete'] == True):
                 Results.append(
                     {
@@ -130,11 +126,7 @@ async def run_program(url, query, session):
 
             else:
 
-                
-
-                
-
-                councillors_elected = await asyncio.gather(*[run_side_program('councillors_elected','/api/v1/CouncilorsByEvent?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(province), session, str(province)) for province in [1,2,3,4,5,6,7,8,9]])
+                councillors_elected = await asyncio.gather(*[run_side_program('councillors_elected','/api/v1/CouncilorsByEvent?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(province), session, str(province)) for province in [1]])
 
                 completed_wards = []
 
@@ -173,6 +165,8 @@ async def run_program(url, query, session):
         if(IEC_ENDPOINT == 'ward_councillor_elected'):
             
             response = await get_api_data(url, query, session)
+
+            print(response)
 
             for candidate in response:
                 Results.append(
@@ -391,8 +385,6 @@ async def run_program(url, query, session):
 
 
 
-
-
         #####
         ## SEATS WON (1383)
         #####
@@ -519,13 +511,16 @@ async def main():
 
             else:
 
-                councillors_elected = await asyncio.gather(*[run_side_program('councillors_elected','/api/v1/CouncilorsByEvent?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(province), session, str(province)) for province in [1,2,3,4,5,6,7,8,9]])
+                councillors_elected = await asyncio.gather(*[run_side_program('councillors_elected','/api/v1/CouncilorsByEvent?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(province), session, str(province)) for province in [1]])
 
                 completed_wards = []
 
                 for province in councillors_elected:
+                    i = 0
                     for ward in province:
+                        i = i + 1
                         completed_wards.append([ward['ProvinceID'],ward['MunicipalityID'],ward['WardID']])
+
 
                 await asyncio.gather(*[run_program('/api/v1/LGEBallotResults?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(ward[0]) + '&MunicipalityID=' + str(ward[1]) + '&WardID=' + str(ward[2]), session) for ward in completed_wards])
                 upload()
@@ -553,7 +548,7 @@ async def main():
                     upload()
 
                 else:
-                    await asyncio.gather(*[run_program('/api/v1/CouncilorsByEvent?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(province), session) for province in [1,2,3,4,5,6,7,8,9]])
+                    await asyncio.gather(*[run_program('/api/v1/CouncilorsByEvent?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(province), session) for province in [1]])
                     upload()
 
         #####
