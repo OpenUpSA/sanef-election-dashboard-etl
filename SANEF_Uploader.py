@@ -147,14 +147,17 @@ async def run_program(url, query, session):
             response = await get_api_data(url, query, session)
 
             for candidate in response:
-                if candidate['WardID'] not in Results:
-                    Results.append(
-                        {
-                            'Geography': candidate['WardID'],
-                            'Contents': candidate['Name'] + ' - ' + candidate['PartyName'],
-                        }
-                    )
+                
+                candidate_entry = {
+                    'Geography': candidate['WardID'],
+                    'Contents': candidate['Name'] + ' - ' + candidate['PartyName'],
+                }
 
+                list_of_all_values = [value for elem in Results for value in elem.values()]
+                value = candidate['WardID']
+
+                if value not in list_of_all_values:
+                    Results.append(candidate_entry)
 
 
         #####
