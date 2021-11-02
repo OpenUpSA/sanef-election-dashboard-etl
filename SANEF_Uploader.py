@@ -58,7 +58,7 @@ def upload():
 
     headers = {'authorization': f"Token {WAZI_TOKEN}"}
     files = {'file': open('datasets/' + file, 'rb')}
-    payload = {'update': False, 'overwrite': True}
+    payload = {'update': True, 'overwrite': True}
 
     wazi_r = requests.post(url, headers=headers, data=payload, files=files)
     wazi_r.raise_for_status()
@@ -93,6 +93,10 @@ async def run_program(url, query, session):
 
             response = await get_api_data(url, query, session)
 
+
+
+
+
             if(response['bResultsComplete'] == True):
                 Results.append(
                     {
@@ -126,50 +130,57 @@ async def run_program(url, query, session):
 
             else:
 
-                sqlquery = "SELECT * FROM LED_GIS_Display_Ward_WardCandidates WHERE fklEEId = " + ELECTORAL_EVENT_ID
-                cursor = conn.cursor()
-                cursor.execute(sqlquery)
+                
 
-                for row in cursor:
+                
 
-                    Results.append(
-                        {
-                            'Geography': row[3],
-                            'Party': row[9] + ' - ' + row[5],
-                            'Count': row[10]
-                        }
-                    )    
-            
+                councillors_elected = await asyncio.gather(*[run_side_program('councillors_elected','/api/v1/CouncilorsByEvent?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(province), session, str(province)) for province in [1,2,3,4,5,6,7,8,9]])
+
+                completed_wards = []
+
+                for province in councillors_elected:
+                    for ward in province:
+                        completed_wards.append([ward['ProvinceID'],ward['MunicipalityID'],ward['WardID']])
+
+                status = await asyncio.gather(*[run_side_program('ward_votes_by_candidate','/api/v1/LGEBallotResults?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(ward[0]) + '&MunicipalityID=' + str(ward[1]) + '&WardID=' + str(ward[2]), session, ward[2]) for ward in completed_wards])
+
+                for ward in status:
+                    if(ward != None):
+
+                        if(ward['bResultsComplete'] == True):
+                            
+                            sqlquery = "SELECT * FROM LED_GIS_Display_Ward_WardCandidates WHERE fklWardId = " + str(ward['WardID']) + " AND fklEEId = " + ELECTORAL_EVENT_ID
+                            cursor = conn.cursor()
+                            cursor.execute(sqlquery)
+
+                            for row in cursor:
+
+                                Results.append(
+                                    {
+                                        'Geography': row[3],
+                                        'Party': row[9] + ' - ' + row[5],
+                                        'Count': row[10]
+                                    }
+                                )    
+                
+
 
         ##### 
         ## WARD: COUNCILLOR ELECTED (1382)
         #####
         
         if(IEC_ENDPOINT == 'ward_councillor_elected'):
+            
+            response = await get_api_data(url, query, session)
 
-            if(RESET_DATASET == 'reset'):
+            for candidate in response:
                 Results.append(
                     {
-                        'Geography': 'None',
-                        'Contents': '-'
+                        'Geography': candidate['WardID'],
+                        'Contents': candidate['Name'] + ' - ' + candidate['PartyName'],
                     }
                 )
 
-            else:
-               
-                sqlquery =  "SELECT fklMunicipalityID, pkfklWardID, pkfklCandidateID, PCR_Candidates.sIDNo, PCR_Candidates.sSurname, PCR_Candidates.sInitials, PCR_Candidates.sFullName, PCR_Party.sPartyName FROM LED_GIS_WardWinners LEFT JOIN PCR_Candidates ON LED_GIS_WardWinners.pkfklCandidateID=PCR_Candidates.pklCandidateID LEFT JOIN PCR_Party ON LED_GIS_WardWinners.pkfklPartyID=PCR_Party.pklPartyID WHERE pkfklEEID = " + ELECTORAL_EVENT_ID
-                cursor = conn.cursor()
-                cursor.execute(sqlquery)
-
-                for row in cursor:
-
-                    Results.append(
-                        {
-                            'Geography': row[1],
-                            'Contents': row[6] + ' ' + row[4] + ' - ' + row[7],
-                        }
-                    )
-            
 
         ##### 
         ## PR VOTES BY PARTY (1380)
@@ -386,8 +397,6 @@ async def run_program(url, query, session):
         
         if(IEC_ENDPOINT == 'seats_won'):
 
-            
-
             if(RESET_DATASET == 'reset'):
                 Results.append(
                     {
@@ -401,7 +410,7 @@ async def run_program(url, query, session):
                 
             else:
 
-                status = await asyncio.gather(*[run_side_program('/api/v1/ResultsProgress?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(muni[0]) + '&MunicipalityID=' + str(muni[1]), session, muni[1]) for muni in Munis])
+                status = await asyncio.gather(*[run_side_program('seats_won','/api/v1/ResultsProgress?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(muni[0]) + '&MunicipalityID=' + str(muni[1]), session, muni[1]) for muni in Munis])
 
                 for muni in status:
                     if(muni != None):
@@ -433,25 +442,31 @@ async def run_program(url, query, session):
                                 )
 
 
-
-
-
-
             
     except Exception as err:
         print(f"Exception occured: {err}")
         pass
 
 
-async def run_side_program(url, query, session, muni):
-    try:
-        response = await get_api_data(url, query, session)
-        if(response != None):
-            return {
-                'muni': muni,
-                'status': response['SeatCalculationCompleted']
-            }
 
+async def run_side_program(endpoint, url, query, session, muni):
+    try:
+
+        if(endpoint == 'seats_won'):
+            response = await get_api_data(url, query, session)
+            if(response != None):
+                return {
+                    'muni': muni,
+                    'status': response['SeatCalculationCompleted']
+                }
+        
+        elif(endpoint == 'ward_votes_by_candidate'):
+            response = await get_api_data(url, query, session)
+            return response
+
+        elif(endpoint == 'councillors_elected'):
+            response = await get_api_data(url, query, session)
+            return response
 
 
     except Exception as err:
@@ -501,7 +516,16 @@ async def main():
                 upload()
 
             else:
-                await asyncio.gather(*[run_program('/api/v1/LGEBallotResults?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(ward[0]) + '&MunicipalityID=' + str(ward[1]) + '&WardID=' + str(ward[2]), session) for ward in Wards])
+
+                councillors_elected = await asyncio.gather(*[run_side_program('councillors_elected','/api/v1/CouncilorsByEvent?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(province), session, str(province)) for province in [1,2,3,4,5,6,7,8,9]])
+
+                completed_wards = []
+
+                for province in councillors_elected:
+                    for ward in province:
+                        completed_wards.append([ward['ProvinceID'],ward['MunicipalityID'],ward['WardID']])
+
+                await asyncio.gather(*[run_program('/api/v1/LGEBallotResults?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(ward[0]) + '&MunicipalityID=' + str(ward[1]) + '&WardID=' + str(ward[2]), session) for ward in completed_wards])
                 upload()
 
         ##### 
@@ -517,8 +541,18 @@ async def main():
         #####
 
         if(IEC_ENDPOINT == 'ward_councillor_elected'):
-            await run_program('','',session)
-            upload()
+                if(RESET_DATASET == 'reset'):
+                    Results.append(
+                        {
+                            'Geography': 'None',
+                            'Contents': '-'
+                        }
+                    )
+                    upload()
+
+                else:
+                    await asyncio.gather(*[run_program('/api/v1/CouncilorsByEvent?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(province), session) for province in [1,2,3,4,5,6,7,8,9]])
+                    upload()
 
         ##### 
         ## PR VOTES BY PARTY (1380)
