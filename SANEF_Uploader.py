@@ -147,12 +147,13 @@ async def run_program(url, query, session):
             response = await get_api_data(url, query, session)
 
             for candidate in response:
-                Results.append(
-                    {
-                        'Geography': candidate['WardID'],
-                        'Contents': candidate['Name'] + ' - ' + candidate['PartyName'],
-                    }
-                )
+                if candidate['WardID'] not in Results:
+                    Results.append(
+                        {
+                            'Geography': candidate['WardID'],
+                            'Contents': candidate['Name'] + ' - ' + candidate['PartyName'],
+                        }
+                    )
 
 
 
@@ -529,42 +530,38 @@ async def main():
                         Results.append(ward_votes_voted)
                         Results.append(ward_votes_didnt_vote)
 
-                for ward in completed_wards:
+                # for ward in completed_wards:
                     
-                    registered_voters = 0
+                #     registered_voters = 0
 
-                    sqlquery =  "SELECT * FROM LED_GIS_Display_Municipal WHERE fklMunicipalityId = " + str(ward[1]) + " AND fklEEId = " + ELECTORAL_EVENT_ID
-                    cursor = conn.cursor()
-                    cursor.execute(sqlquery)
+                #     sqlquery =  "SELECT * FROM LED_GIS_Display_Municipal WHERE fklMunicipalityId = " + str(ward[1]) + " AND fklEEId = " + ELECTORAL_EVENT_ID
+                #     cursor = conn.cursor()
+                #     cursor.execute(sqlquery)
 
-                    for row in cursor:
-                        
-                        registered_voters = row[21]
+                #     for row in cursor:
+                #         registered_voters = row[21]
 
+                # sqlquery =  "Select EE_Municipalities.sDescription , sum(Fact_LGE_Master_VDStats.lVoterTurnout) from Fact_LGE_Master_VDStats join EE_Municipalities on fklMunicipalityID = EE_Municipalities.pklMunicipalityID where pkfklEEID = " + ELECTORAL_EVENT_ID + " and EE_Municipalities.pkfklDelimID = 78 group by EE_Municipalities.sDescription, fklMunicipalityID order by EE_Municipalities.sDescription" 
+                # cursor = conn.cursor()
+                # cursor.execute(sqlquery)
 
+                # for turnout in cursor:
 
+                #     for turnout in cursor:
+                #         ward_votes_voted = {
+                #             'Geography': turnout[0].split(' - ')[0],
+                #             'Voter Turnout': 'Voted',
+                #             'Count': turnout[1]
+                #         }
 
-                sqlquery =  "Select EE_Municipalities.sDescription , sum(Fact_LGE_Master_VDStats.lVoterTurnout) from Fact_LGE_Master_VDStats join EE_Municipalities on fklMunicipalityID = EE_Municipalities.pklMunicipalityID where pkfklEEID = " + ELECTORAL_EVENT_ID + " and EE_Municipalities.pkfklDelimID = 78 group by EE_Municipalities.sDescription, fklMunicipalityID order by EE_Municipalities.sDescription" 
-                cursor = conn.cursor()
-                cursor.execute(sqlquery)
+                #         ward_votes_didnt_vote = {
+                #             'Geography': turnout[0].split(' - ')[0],
+                #             'Voter Turnout': "Didn't Vote",
+                #             'Count': registered_voters - turnout[1]
+                #         }
 
-                for turnout in cursor:
-
-                    for turnout in cursor:
-                        ward_votes_voted = {
-                            'Geography': turnout[0].split(' - ')[0],
-                            'Voter Turnout': 'Voted',
-                            'Count': turnout[1]
-                        }
-
-                        ward_votes_didnt_vote = {
-                            'Geography': turnout[0].split(' - ')[0],
-                            'Voter Turnout': "Didn't Vote",
-                            'Count': registered_voters - turnout[1]
-                        }
-
-                        Results.append(ward_votes_voted)
-                        Results.append(ward_votes_didnt_vote)
+                #         Results.append(ward_votes_voted)
+                #         Results.append(ward_votes_didnt_vote)
 
                 upload()
 
