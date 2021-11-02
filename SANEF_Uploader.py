@@ -166,8 +166,6 @@ async def run_program(url, query, session):
             
             response = await get_api_data(url, query, session)
 
-            print(response)
-
             for candidate in response:
                 Results.append(
                     {
