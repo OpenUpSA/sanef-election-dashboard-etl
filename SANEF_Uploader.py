@@ -53,7 +53,7 @@ def upload():
 
     Results_df = pd.DataFrame(Results)
     Results_df.to_csv('datasets/' + file, index=False)
-    
+
     url = f"{WAZI_ENDPOINT}/api/v1/datasets/{DATASET_ID}/upload/"
 
     headers = {'authorization': f"Token {WAZI_TOKEN}"}
@@ -65,12 +65,12 @@ def upload():
 
 async def run_program(url, query, session):
     try:
-        
-        
-        ##### 
+
+
+        #####
         ## WARD: VOTES BY PARTY (1378)
         #####
-        
+
         if(IEC_ENDPOINT == 'ward_votes_by_party'):
 
             response = await get_api_data(url, query, session)
@@ -85,10 +85,10 @@ async def run_program(url, query, session):
                         }
                     )
 
-        ##### 
+        #####
         ## VOTER TURNOUT (1386)
         #####
-        
+
         if(IEC_ENDPOINT == 'voter_turnout'):
 
             response = await get_api_data(url, query, session)
@@ -113,10 +113,10 @@ async def run_program(url, query, session):
                     }
                 )
 
-        ##### 
+        #####
         ## WARD: VOTES BY CANDIDATE (1379)
         #####
-        
+
         if(IEC_ENDPOINT == 'ward_votes_by_candidate'):
 
             if(RESET_DATASET == 'reset'):
@@ -165,10 +165,11 @@ async def run_program(url, query, session):
                 
 
 
-        ##### 
+
+        #####
         ## WARD: COUNCILLOR ELECTED (1382)
         #####
-        
+
         if(IEC_ENDPOINT == 'ward_councillor_elected'):
             
             response = await get_api_data(url, query, session)
@@ -182,10 +183,11 @@ async def run_program(url, query, session):
                 )
 
 
-        ##### 
+
+        #####
         ## PR VOTES BY PARTY (1380)
         #####
-        
+
         if(IEC_ENDPOINT == 'pr_votes_by_party'):
 
             if(RESET_DATASET == 'reset'):
@@ -213,10 +215,10 @@ async def run_program(url, query, session):
                         }
                     )
 
-        ##### 
+        #####
         ## HUNG OUTRIGHT MAJORITY COUNCILS (1384)
         #####
-        
+
         if(IEC_ENDPOINT == 'hung_councils'):
 
 
@@ -229,7 +231,7 @@ async def run_program(url, query, session):
                         'Count': 0
                     }
                 )
-                
+
 
             else:
 
@@ -276,10 +278,10 @@ async def run_program(url, query, session):
                     )
 
 
-        ##### 
+        #####
         ## LIST OF HUNG COUNCILS (1424)
         #####
-        
+
         if(IEC_ENDPOINT == 'list_of_hung_councils'):
 
 
@@ -291,10 +293,10 @@ async def run_program(url, query, session):
                         'Contents': '-'
                     }
                 )
-                
+
 
             else:
-                
+
                 sqlquery =  "SELECT * FROM LED_GIS_CouncilWinners WHERE bHung = 1 AND fklEEId = " + ELECTORAL_EVENT_ID
                 cursor = conn.cursor()
                 cursor.execute(sqlquery)
@@ -310,7 +312,7 @@ async def run_program(url, query, session):
 
                 hung_councils = dff.groupby(['ProvinceID'])
 
-               
+
                 for geo, group in hung_councils:
 
                     contents = '<ul>'
@@ -326,8 +328,8 @@ async def run_program(url, query, session):
                         }
                     )
 
-                
-        ##### 
+
+        #####
         ## COUNCILS WON BY PARTY (1385)
         #####
 
@@ -352,7 +354,7 @@ async def run_program(url, query, session):
 
                 columns = ['pklPartyID','sPartyName','sPartyAbbr']
 
-                parties_df = pd.DataFrame([tuple(t) for t in cursor], columns=columns) 
+                parties_df = pd.DataFrame([tuple(t) for t in cursor], columns=columns)
 
                 sqlquery =  "SELECT * FROM LED_GIS_CouncilWinners WHERE bHung = 0 AND fklEEId = " + ELECTORAL_EVENT_ID
                 cursor = conn.cursor()
@@ -388,13 +390,13 @@ async def run_program(url, query, session):
                     )
 
 
-            
 
 
-        ##### 
+
+        #####
         ## SEATS WON (1383)
         #####
-        
+
         if(IEC_ENDPOINT == 'seats_won'):
 
             if(RESET_DATASET == 'reset'):
@@ -406,8 +408,8 @@ async def run_program(url, query, session):
                         'Count': 0
                     }
                 )
-                
-                
+
+
             else:
 
                 status = await asyncio.gather(*[run_side_program('seats_won','/api/v1/ResultsProgress?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(muni[0]) + '&MunicipalityID=' + str(muni[1]), session, muni[1]) for muni in Munis])
@@ -423,7 +425,7 @@ async def run_program(url, query, session):
                             for row in cursor:
 
                                 muni = munis_df.loc[munis_df.MunicipalityID == row[2]]['Municipality'].values[0]
-                                
+
                                 Results.append(
                                     {
                                         'Geography': muni,
@@ -475,11 +477,11 @@ async def run_side_program(endpoint, url, query, session, muni):
 
 
 
-    
-async def main():    
+
+async def main():
     async with ClientSession() as session:
 
-        ##### 
+        #####
         ## WARD: VOTES BY PARTY (1378)
         #####
 
@@ -494,12 +496,12 @@ async def main():
                     }
                 )
                 upload()
-                
+
             else:
                 await asyncio.gather(*[run_program('/api/v1/LGEBallotResults?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(ward[0]) + '&MunicipalityID=' + str(ward[1]) + '&WardID=' + str(ward[2]), session) for ward in Wards])
                 upload()
 
-        ##### 
+        #####
         ## VOTER TURNOUT (1386)
         #####
 
@@ -528,7 +530,7 @@ async def main():
                 await asyncio.gather(*[run_program('/api/v1/LGEBallotResults?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(ward[0]) + '&MunicipalityID=' + str(ward[1]) + '&WardID=' + str(ward[2]), session) for ward in completed_wards])
                 upload()
 
-        ##### 
+        #####
         ## WARD: VOTES BY CANDIDATE (1379)
         #####
 
@@ -536,7 +538,7 @@ async def main():
             await run_program('','',session)
             upload()
 
-        ##### 
+        #####
         ## WARD: COUNCILLOR ELECTED (1382)
         #####
 
@@ -554,7 +556,7 @@ async def main():
                     await asyncio.gather(*[run_program('/api/v1/CouncilorsByEvent?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(province), session) for province in [1,2,3,4,5,6,7,8,9]])
                     upload()
 
-        ##### 
+        #####
         ## PR VOTES BY PARTY (1380)
         #####
 
@@ -562,7 +564,7 @@ async def main():
             await run_program('','',session)
             upload()
 
-        ##### 
+        #####
         ## PR VOTES BY PARTY (1380)
         #####
 
@@ -570,7 +572,7 @@ async def main():
             await run_program('','',session)
             upload()
 
-        ##### 
+        #####
         ## HUNG / OUTRIGHT MAJORITY COUNCILS (1384)
         #####
 
@@ -578,7 +580,7 @@ async def main():
             await run_program('','',session)
             upload()
 
-        ##### 
+        #####
         ## COUNCILS WON BY PARTY (1385)
         #####
 
@@ -586,7 +588,7 @@ async def main():
             await run_program('','',session)
             upload()
 
-        ##### 
+        #####
         ## LIST OF HUNG COUNCILS (1424)
         #####
 
@@ -594,7 +596,7 @@ async def main():
             await run_program('','',session)
             upload()
 
-        ##### 
+        #####
         ## SEATS WON (1383)
         #####
 
@@ -602,7 +604,7 @@ async def main():
             await run_program('','',session)
             upload()
 
-        
-        
+
+
 
 asyncio.run(main())
