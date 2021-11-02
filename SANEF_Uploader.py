@@ -493,8 +493,9 @@ async def main():
 
                 for row in cursor:
                     munigeo = munis_df.loc[munis_df.MunicipalityID == row[0]]['ProvinceID'].values[0]
+
                     completed_wards.append([munigeo,row[0],row[1]])
-                
+
                 # END COMPLETED WARDS CHECK
 
                 for ward in completed_wards:
@@ -512,13 +513,13 @@ async def main():
                         total_pr_votes = total_pr_votes + row[10]
                     
                     ward_votes_voted = {
-                        'Geography': row[2],
+                        'Geography': ward[2],
                         'Voter Turnout': 'Voted',
                         'Count': max(total_ward_votes,total_pr_votes)
                     }
 
                     ward_votes_didnt_vote = {
-                        'Geography': row[2],
+                        'Geography': ward[2],
                         'Voter Turnout': "Didn't Vote",
                         'Count': registered_voters - (max(total_ward_votes,total_pr_votes))
                     }
