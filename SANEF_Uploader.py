@@ -173,19 +173,36 @@ async def run_program(url, query, session):
 
             else:
 
-                sqlquery =  "SELECT * FROM LED_GIS_Display_Ward WHERE fklEEId = " + ELECTORAL_EVENT_ID
+                # CHECK COMPLETED WARDS
+               
+                sqlquery =  "SELECT fklMunicipalityID, pkfklWardID, pkfklCandidateID, PCR_Candidates.sIDNo, PCR_Candidates.sSurname, PCR_Candidates.sInitials, PCR_Candidates.sFullName, PCR_Party.sPartyName FROM LED_GIS_WardWinners INNER JOIN PCR_Candidates ON LED_GIS_WardWinners.pkfklCandidateID=PCR_Candidates.pklCandidateID INNER JOIN PCR_Party ON LED_GIS_WardWinners.pkfklPartyID=PCR_Party.pklPartyID WHERE pkfklEEID =" + str(ELECTORAL_EVENT_ID)
                 cursor = conn.cursor()
                 cursor.execute(sqlquery)
 
-                for row in cursor:
+                completed_wards = []
 
-                    Results.append(
-                        {
-                            'Geography': row[3],
-                            'Party': row[5],
-                            'Count': row[10]
-                        }
-                    )
+                for row in cursor:
+                    munigeo = munis_df.loc[munis_df.MunicipalityID == row[0]]['ProvinceID'].values[0]
+                    completed_wards.append([munigeo,row[0],row[1]])
+                
+                # END COMPLETED WARDS CHECK
+
+                for ward in completed_wards:
+
+                    sqlquery =  "SELECT * FROM LED_GIS_Display_Ward WHERE fklWardId = " + str(ward[2]) + " AND fklEEId = " + ELECTORAL_EVENT_ID
+                    cursor = conn.cursor()
+                    cursor.execute(sqlquery)
+
+                    for row in cursor:
+
+                        Results.append(
+                            {
+                                'Geography': row[3],
+                                'Party': row[5],
+                                'Count': row[10]
+                            }
+                        )
+                    
 
         #####
         ## HUNG OUTRIGHT MAJORITY COUNCILS (1384)
