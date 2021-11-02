@@ -206,6 +206,7 @@ async def run_program(url, query, session):
                                 'Count': row[10]
                             }
                         )
+
                     
 
         #####
@@ -593,14 +594,6 @@ async def main():
             else:
                 await asyncio.gather(*[run_program('/api/v1/CouncilorsByEvent?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(province), session) for province in [1]])
                 upload()
-
-        #####
-        ## PR VOTES BY PARTY (1380)
-        #####
-
-        if(IEC_ENDPOINT == 'pr_votes_by_party'):
-            await run_program('','',session)
-            upload()
 
         #####
         ## PR VOTES BY PARTY (1380)
