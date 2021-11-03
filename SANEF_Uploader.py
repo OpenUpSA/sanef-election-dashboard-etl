@@ -490,22 +490,27 @@ async def main():
 
                 for ward in completed_wards:
                     
-                    sqlquery =  "Select fklWardID, lRegisteredVoters, sum(Fact_LGE_Master_VDStats.lVoterTurnout) from Fact_LGE_Master_VDStats where fklWardID = " + str(ward[2]) + " and pkfklEEID = " + str(ELECTORAL_EVENT_ID) + " group by fklWardID, lRegisteredVoters order by fklWardID" 
-                    cursor = conn.cursor()
-                    cursor.execute(sqlquery)
+                    sqlquery =  "Select fklWardID, lRegisteredVoters, sum(Fact_LGE_Master_VDStats.lVoterTurnout) as votes from Fact_LGE_Master_VDStats where fklWardID = " + str(ward[2]) + " and pkfklEEID = " + str(ELECTORAL_EVENT_ID) + " group by fklWardID, lRegisteredVoters order by fklWardID" 
+                    # cursor = conn.cursor()
+                    df = pd.read_sql(sqlquery,conn)
 
-                    for turnout in cursor:
+                    df['tvoters'] = df['lRegisteredVoters'].sum()
+                    df['tvotes'] = df['votes'].sum()
+
+                    df = df.drop_duplicates(subset='fklWardID')
+
+                    for index, row in df.iterrows():
 
                         ward_votes_voted = {
-                            'Geography': turnout[0],
+                            'Geography': row['fklWardID'],
                             'Voter Turnout': 'Voted',
-                            'Count': turnout[1]
+                            'Count': row['tvotes']
                         }
 
                         ward_votes_didnt_vote = {
-                            'Geography': turnout[0],
+                            'Geography': row['fklWardID'],
                             'Voter Turnout': "Didn't Vote",
-                            'Count': turnout[1] - turnout[2]
+                            'Count': row['tvoters'] - row['tvotes']
                         }
 
                         Results.append(ward_votes_voted)
