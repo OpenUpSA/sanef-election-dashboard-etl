@@ -54,14 +54,14 @@ def upload():
     Results_df = pd.DataFrame(Results)
     Results_df.to_csv('datasets/' + file, index=False)
 
-    # url = f"{WAZI_ENDPOINT}/api/v1/datasets/{DATASET_ID}/upload/"
+    url = f"{WAZI_ENDPOINT}/api/v1/datasets/{DATASET_ID}/upload/"
 
-    # headers = {'authorization': f"Token {WAZI_TOKEN}"}
-    # files = {'file': open('datasets/' + file, 'rb')}
-    # payload = {'update': True, 'overwrite': True}
+    headers = {'authorization': f"Token {WAZI_TOKEN}"}
+    files = {'file': open('datasets/' + file, 'rb')}
+    payload = {'update': True, 'overwrite': True}
 
-    # wazi_r = requests.post(url, headers=headers, data=payload, files=files)
-    # wazi_r.raise_for_status()
+    wazi_r = requests.post(url, headers=headers, data=payload, files=files)
+    wazi_r.raise_for_status()
 
 async def run_program(url, query, session):
     try:
@@ -491,7 +491,6 @@ async def main():
                 for ward in completed_wards:
                     
                     sqlquery =  "Select fklWardID, lRegisteredVoters, sum(Fact_LGE_Master_VDStats.lVoterTurnout) as votes from Fact_LGE_Master_VDStats where fklWardID = " + str(ward[2]) + " and pkfklEEID = " + str(ELECTORAL_EVENT_ID) + " group by fklWardID, lRegisteredVoters order by fklWardID" 
-                    # cursor = conn.cursor()
                     df = pd.read_sql(sqlquery,conn)
 
                     df['tvoters'] = df['lRegisteredVoters'].sum()
