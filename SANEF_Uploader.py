@@ -106,15 +106,33 @@ async def run_program(url, query, session):
 
                 # CHECK COMPLETED WARDS
                
-                sqlquery =  "SELECT fklMunicipalityID, pkfklWardID, pkfklCandidateID, PCR_Candidates.sIDNo, PCR_Candidates.sSurname, PCR_Candidates.sInitials, PCR_Candidates.sFullName, PCR_Party.sPartyName FROM LED_GIS_WardWinners INNER JOIN PCR_Candidates ON LED_GIS_WardWinners.pkfklCandidateID=PCR_Candidates.pklCandidateID INNER JOIN PCR_Party ON LED_GIS_WardWinners.pkfklPartyID=PCR_Party.pklPartyID WHERE pkfklEEID =" + str(ELECTORAL_EVENT_ID)
+                sqlquery = """
+                select distinct EE_VotingDistricts.fklWardId
+                from EE_VotingDistricts
+                left join (
+                    select fklWardId , fklVotingDistrict 
+                    from (
+                        select fklWardId , fklVotingDistrict, sum(lTotalVotesCast) as VDTotalVotesCast 
+                        from LED_GIS_Display_VotingDistrict
+                        where fklEEId = 1091
+                        group by fklWardId, fklVotingDistrict 
+                    ) VDVotesCast
+                    where VDTotalVotesCast = 0
+                ) UnfinishedDistricts on EE_VotingDistricts.fklWardID = UnfinishedDistricts.fklWardId
+                where pkfklDelimID  = 78
+                and UnfinishedDistricts.fklWardId is NULL
+                order by EE_VotingDistricts.fklWardId
+                """
                 cursor = conn.cursor()
                 cursor.execute(sqlquery)
 
                 completed_wards = []
 
+
                 for row in cursor:
-                    munigeo = munis_df.loc[munis_df.MunicipalityID == row[0]]['ProvinceID'].values[0]
-                    completed_wards.append([munigeo,row[0],row[1]])
+                    ward = wards_df.loc[wards_df['WardID'] == row[0]].values[0]
+
+                    completed_wards.append([ward[0],ward[1],ward[2]])
                 
                 # END COMPLETED WARDS CHECK
 
@@ -179,15 +197,33 @@ async def run_program(url, query, session):
 
                 # CHECK COMPLETED WARDS
                
-                sqlquery =  "SELECT fklMunicipalityID, pkfklWardID, pkfklCandidateID, PCR_Candidates.sIDNo, PCR_Candidates.sSurname, PCR_Candidates.sInitials, PCR_Candidates.sFullName, PCR_Party.sPartyName FROM LED_GIS_WardWinners INNER JOIN PCR_Candidates ON LED_GIS_WardWinners.pkfklCandidateID=PCR_Candidates.pklCandidateID INNER JOIN PCR_Party ON LED_GIS_WardWinners.pkfklPartyID=PCR_Party.pklPartyID WHERE pkfklEEID =" + str(ELECTORAL_EVENT_ID)
+                sqlquery = """
+                select distinct EE_VotingDistricts.fklWardId
+                from EE_VotingDistricts
+                left join (
+                    select fklWardId , fklVotingDistrict 
+                    from (
+                        select fklWardId , fklVotingDistrict, sum(lTotalVotesCast) as VDTotalVotesCast 
+                        from LED_GIS_Display_VotingDistrict
+                        where fklEEId = 1091
+                        group by fklWardId, fklVotingDistrict 
+                    ) VDVotesCast
+                    where VDTotalVotesCast = 0
+                ) UnfinishedDistricts on EE_VotingDistricts.fklWardID = UnfinishedDistricts.fklWardId
+                where pkfklDelimID  = 78
+                and UnfinishedDistricts.fklWardId is NULL
+                order by EE_VotingDistricts.fklWardId
+                """
                 cursor = conn.cursor()
                 cursor.execute(sqlquery)
 
                 completed_wards = []
 
+
                 for row in cursor:
-                    munigeo = munis_df.loc[munis_df.MunicipalityID == row[0]]['ProvinceID'].values[0]
-                    completed_wards.append([munigeo,row[0],row[1]])
+                    ward = wards_df.loc[wards_df['WardID'] == row[0]].values[0]
+
+                    completed_wards.append([ward[0],ward[1],ward[2]])
                 
                 # END COMPLETED WARDS CHECK
 
@@ -454,18 +490,36 @@ async def main():
 
                 # CHECK COMPLETED WARDS
                
-                sqlquery =  "SELECT fklMunicipalityID, pkfklWardID, pkfklCandidateID, PCR_Candidates.sIDNo, PCR_Candidates.sSurname, PCR_Candidates.sInitials, PCR_Candidates.sFullName, PCR_Party.sPartyName FROM LED_GIS_WardWinners INNER JOIN PCR_Candidates ON LED_GIS_WardWinners.pkfklCandidateID=PCR_Candidates.pklCandidateID INNER JOIN PCR_Party ON LED_GIS_WardWinners.pkfklPartyID=PCR_Party.pklPartyID WHERE pkfklEEID =" + str(ELECTORAL_EVENT_ID)
+                sqlquery = """
+                select distinct EE_VotingDistricts.fklWardId
+                from EE_VotingDistricts
+                left join (
+                    select fklWardId , fklVotingDistrict 
+                    from (
+                        select fklWardId , fklVotingDistrict, sum(lTotalVotesCast) as VDTotalVotesCast 
+                        from LED_GIS_Display_VotingDistrict
+                        where fklEEId = 1091
+                        group by fklWardId, fklVotingDistrict 
+                    ) VDVotesCast
+                    where VDTotalVotesCast = 0
+                ) UnfinishedDistricts on EE_VotingDistricts.fklWardID = UnfinishedDistricts.fklWardId
+                where pkfklDelimID  = 78
+                and UnfinishedDistricts.fklWardId is NULL
+                order by EE_VotingDistricts.fklWardId
+                """
                 cursor = conn.cursor()
                 cursor.execute(sqlquery)
 
                 completed_wards = []
 
-                for row in cursor:
-                    munigeo = munis_df.loc[munis_df.MunicipalityID == row[0]]['ProvinceID'].values[0]
-                    completed_wards.append([munigeo,row[0],row[1]])
-                
-                # END COMPLETED WARDS CHECK
 
+                for row in cursor:
+                    ward = wards_df.loc[wards_df['WardID'] == row[0]].values[0]
+
+                    completed_wards.append([ward[0],ward[1],ward[2]])
+
+                # END COMPLETED WARDS CHECK
+                
 
                 await asyncio.gather(*[run_program('/api/v1/LGEBallotResults?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(ward[0]) + '&MunicipalityID=' + str(ward[1]) + '&WardID=' + str(ward[2]), session) for ward in completed_wards])
                 upload()
@@ -490,16 +544,33 @@ async def main():
 
                 # CHECK COMPLETED WARDS
                
-                sqlquery =  "SELECT fklMunicipalityID, pkfklWardID, pkfklCandidateID, PCR_Candidates.sIDNo, PCR_Candidates.sSurname, PCR_Candidates.sInitials, PCR_Candidates.sFullName, PCR_Party.sPartyName FROM LED_GIS_WardWinners INNER JOIN PCR_Candidates ON LED_GIS_WardWinners.pkfklCandidateID=PCR_Candidates.pklCandidateID INNER JOIN PCR_Party ON LED_GIS_WardWinners.pkfklPartyID=PCR_Party.pklPartyID WHERE pkfklEEID =" + str(ELECTORAL_EVENT_ID)
+                sqlquery = """
+                select distinct EE_VotingDistricts.fklWardId
+                from EE_VotingDistricts
+                left join (
+                    select fklWardId , fklVotingDistrict 
+                    from (
+                        select fklWardId , fklVotingDistrict, sum(lTotalVotesCast) as VDTotalVotesCast 
+                        from LED_GIS_Display_VotingDistrict
+                        where fklEEId = 1091
+                        group by fklWardId, fklVotingDistrict 
+                    ) VDVotesCast
+                    where VDTotalVotesCast = 0
+                ) UnfinishedDistricts on EE_VotingDistricts.fklWardID = UnfinishedDistricts.fklWardId
+                where pkfklDelimID  = 78
+                and UnfinishedDistricts.fklWardId is NULL
+                order by EE_VotingDistricts.fklWardId
+                """
                 cursor = conn.cursor()
                 cursor.execute(sqlquery)
 
                 completed_wards = []
 
                 for row in cursor:
-                    munigeo = munis_df.loc[munis_df.MunicipalityID == row[0]]['ProvinceID'].values[0]
 
-                    completed_wards.append([munigeo,row[0],row[1]])
+                    ward = wards_df.loc[wards_df['WardID'] == row[0]].values[0]
+
+                    completed_wards.append([ward[0],ward[1],ward[2]])
 
                 # END COMPLETED WARDS CHECK
 
@@ -675,6 +746,36 @@ async def main():
 
                 
                 upload()
+
+        #####
+        ## WARDS COMPLETE
+        #####
+
+        if(IEC_ENDPOINT == 'wards_complete'):
+            
+            sqlquery = """
+            select distinct EE_VotingDistricts.fklWardId
+            from EE_VotingDistricts
+            left join (
+                select fklWardId , fklVotingDistrict 
+                from (
+                    select fklWardId , fklVotingDistrict, sum(lTotalVotesCast) as VDTotalVotesCast 
+                    from LED_GIS_Display_VotingDistrict
+                    where fklEEId = 1091
+                    group by fklWardId, fklVotingDistrict 
+                ) VDVotesCast
+                where VDTotalVotesCast = 0
+            ) UnfinishedDistricts on EE_VotingDistricts.fklWardID = UnfinishedDistricts.fklWardId
+            where pkfklDelimID  = 78
+            and UnfinishedDistricts.fklWardId is NULL
+            order by EE_VotingDistricts.fklWardId
+            """
+            cursor = conn.cursor()
+            cursor.execute(sqlquery)
+
+            for row in cursor:
+                print(row)
+
 
 
 
