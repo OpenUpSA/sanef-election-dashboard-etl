@@ -54,14 +54,14 @@ def upload():
     Results_df = pd.DataFrame(Results)
     Results_df.to_csv('datasets/' + file, index=False)
 
-    url = f"{WAZI_ENDPOINT}/api/v1/datasets/{DATASET_ID}/upload/"
+    # url = f"{WAZI_ENDPOINT}/api/v1/datasets/{DATASET_ID}/upload/"
 
-    headers = {'authorization': f"Token {WAZI_TOKEN}"}
-    files = {'file': open('datasets/' + file, 'rb')}
-    payload = {'update': True, 'overwrite': True}
+    # headers = {'authorization': f"Token {WAZI_TOKEN}"}
+    # files = {'file': open('datasets/' + file, 'rb')}
+    # payload = {'update': True, 'overwrite': True}
 
-    wazi_r = requests.post(url, headers=headers, data=payload, files=files)
-    wazi_r.raise_for_status()
+    # wazi_r = requests.post(url, headers=headers, data=payload, files=files)
+    # wazi_r.raise_for_status()
 
 async def run_program(url, query, session):
     try:
@@ -104,37 +104,7 @@ async def run_program(url, query, session):
 
             else:
 
-                # CHECK COMPLETED WARDS
-               
-                sqlquery = """
-                select distinct EE_VotingDistricts.fklWardId
-                from EE_VotingDistricts
-                left join (
-                    select fklWardId , fklVotingDistrict 
-                    from (
-                        select fklWardId , fklVotingDistrict, sum(lTotalVotesCast) as VDTotalVotesCast 
-                        from LED_GIS_Display_VotingDistrict
-                        where fklEEId = 1091
-                        group by fklWardId, fklVotingDistrict 
-                    ) VDVotesCast
-                    where VDTotalVotesCast = 0
-                ) UnfinishedDistricts on EE_VotingDistricts.fklWardID = UnfinishedDistricts.fklWardId
-                where pkfklDelimID  = 78
-                and UnfinishedDistricts.fklWardId is NULL
-                order by EE_VotingDistricts.fklWardId
-                """
-                cursor = conn.cursor()
-                cursor.execute(sqlquery)
-
-                completed_wards = []
-
-
-                for row in cursor:
-                    ward = wards_df.loc[wards_df['WardID'] == row[0]].values[0]
-
-                    completed_wards.append([ward[0],ward[1],ward[2]])
-                
-                # END COMPLETED WARDS CHECK
+                completed_wards = await check_completed_wards()
 
 
                 for ward in completed_wards:
@@ -195,37 +165,7 @@ async def run_program(url, query, session):
 
             else:
 
-                # CHECK COMPLETED WARDS
-               
-                sqlquery = """
-                select distinct EE_VotingDistricts.fklWardId
-                from EE_VotingDistricts
-                left join (
-                    select fklWardId , fklVotingDistrict 
-                    from (
-                        select fklWardId , fklVotingDistrict, sum(lTotalVotesCast) as VDTotalVotesCast 
-                        from LED_GIS_Display_VotingDistrict
-                        where fklEEId = 1091
-                        group by fklWardId, fklVotingDistrict 
-                    ) VDVotesCast
-                    where VDTotalVotesCast = 0
-                ) UnfinishedDistricts on EE_VotingDistricts.fklWardID = UnfinishedDistricts.fklWardId
-                where pkfklDelimID  = 78
-                and UnfinishedDistricts.fklWardId is NULL
-                order by EE_VotingDistricts.fklWardId
-                """
-                cursor = conn.cursor()
-                cursor.execute(sqlquery)
-
-                completed_wards = []
-
-
-                for row in cursor:
-                    ward = wards_df.loc[wards_df['WardID'] == row[0]].values[0]
-
-                    completed_wards.append([ward[0],ward[1],ward[2]])
-                
-                # END COMPLETED WARDS CHECK
+                completed_wards = await check_completed_wards()
 
                 for ward in completed_wards:
 
@@ -465,6 +405,41 @@ async def run_side_program(endpoint, url, query, session, muni):
         pass
 
 
+async def check_completed_wards():
+    try:
+        sqlquery = """
+        select distinct EE_VotingDistricts.fklWardId
+        from EE_VotingDistricts
+        left join (
+            select fklWardId , fklVotingDistrict 
+            from (
+                select fklWardId , fklVotingDistrict, sum(lTotalVotesCast) as VDTotalVotesCast 
+                from LED_GIS_Display_VotingDistrict
+                where fklEEId = 1091
+                group by fklWardId, fklVotingDistrict 
+            ) VDVotesCast
+            where VDTotalVotesCast = 0
+        ) UnfinishedDistricts on EE_VotingDistricts.fklWardID = UnfinishedDistricts.fklWardId
+        where pkfklDelimID  = 78
+        and UnfinishedDistricts.fklWardId is NULL
+        order by EE_VotingDistricts.fklWardId
+        """
+        cursor = conn.cursor()
+        cursor.execute(sqlquery)
+
+        completed_wards = []
+
+
+        for row in cursor:
+            ward = wards_df.loc[wards_df['WardID'] == row[0]].values[0]
+
+            completed_wards.append([ward[0],ward[1],ward[2]])
+
+        return completed_wards
+    
+    except Exception as err:
+        print(f"Exception occured: {err}")
+        pass
 
 
 async def main():
@@ -488,38 +463,7 @@ async def main():
 
             else:
 
-                # CHECK COMPLETED WARDS
-               
-                sqlquery = """
-                select distinct EE_VotingDistricts.fklWardId
-                from EE_VotingDistricts
-                left join (
-                    select fklWardId , fklVotingDistrict 
-                    from (
-                        select fklWardId , fklVotingDistrict, sum(lTotalVotesCast) as VDTotalVotesCast 
-                        from LED_GIS_Display_VotingDistrict
-                        where fklEEId = 1091
-                        group by fklWardId, fklVotingDistrict 
-                    ) VDVotesCast
-                    where VDTotalVotesCast = 0
-                ) UnfinishedDistricts on EE_VotingDistricts.fklWardID = UnfinishedDistricts.fklWardId
-                where pkfklDelimID  = 78
-                and UnfinishedDistricts.fklWardId is NULL
-                order by EE_VotingDistricts.fklWardId
-                """
-                cursor = conn.cursor()
-                cursor.execute(sqlquery)
-
-                completed_wards = []
-
-
-                for row in cursor:
-                    ward = wards_df.loc[wards_df['WardID'] == row[0]].values[0]
-
-                    completed_wards.append([ward[0],ward[1],ward[2]])
-
-                # END COMPLETED WARDS CHECK
-                
+                completed_wards = await check_completed_wards()
 
                 await asyncio.gather(*[run_program('/api/v1/LGEBallotResults?ElectoralEventID=' + str(ELECTORAL_EVENT_ID), '&ProvinceID=' + str(ward[0]) + '&MunicipalityID=' + str(ward[1]) + '&WardID=' + str(ward[2]), session) for ward in completed_wards])
                 upload()
@@ -542,54 +486,16 @@ async def main():
 
             else:
 
-                # CHECK COMPLETED WARDS
-               
-                sqlquery = """
-                select distinct EE_VotingDistricts.fklWardId
-                from EE_VotingDistricts
-                left join (
-                    select fklWardId , fklVotingDistrict 
-                    from (
-                        select fklWardId , fklVotingDistrict, sum(lTotalVotesCast) as VDTotalVotesCast 
-                        from LED_GIS_Display_VotingDistrict
-                        where fklEEId = 1091
-                        group by fklWardId, fklVotingDistrict 
-                    ) VDVotesCast
-                    where VDTotalVotesCast = 0
-                ) UnfinishedDistricts on EE_VotingDistricts.fklWardID = UnfinishedDistricts.fklWardId
-                where pkfklDelimID  = 78
-                and UnfinishedDistricts.fklWardId is NULL
-                order by EE_VotingDistricts.fklWardId
-                """
-                cursor = conn.cursor()
-                cursor.execute(sqlquery)
-
-                completed_wards = []
-
-                for row in cursor:
-
-                    ward = wards_df.loc[wards_df['WardID'] == row[0]].values[0]
-
-                    completed_wards.append([ward[0],ward[1],ward[2]])
-
-                # END COMPLETED WARDS CHECK
+                completed_wards = await check_completed_wards()
 
                 for ward in completed_wards:
                     
-                    registered_voters = 0
-
-                    sqlquery =  "SELECT * FROM LED_GIS_Display_Ward WHERE fklWardId = " + str(ward[2]) + " AND fklEEId = " + ELECTORAL_EVENT_ID
-                    cursor = conn.cursor()
-                    cursor.execute(sqlquery)
-
-                    for row in cursor:
-                        registered_voters = row[13]
-
-                    sqlquery =  "Select fklWardID, sum(Fact_LGE_Master_VDStats.lVoterTurnout) from Fact_LGE_Master_VDStats where fklWardID = " + str(ward[2]) + " and pkfklEEID = " + str(ELECTORAL_EVENT_ID) + " group by fklWardID order by fklWardID" 
+                    sqlquery =  "Select fklWardID, lRegisteredVoters, sum(Fact_LGE_Master_VDStats.lVoterTurnout) from Fact_LGE_Master_VDStats where fklWardID = " + str(ward[2]) + " and pkfklEEID = " + str(ELECTORAL_EVENT_ID) + " group by fklWardID, lRegisteredVoters order by fklWardID" 
                     cursor = conn.cursor()
                     cursor.execute(sqlquery)
 
                     for turnout in cursor:
+
                         ward_votes_voted = {
                             'Geography': turnout[0],
                             'Voter Turnout': 'Voted',
@@ -599,44 +505,13 @@ async def main():
                         ward_votes_didnt_vote = {
                             'Geography': turnout[0],
                             'Voter Turnout': "Didn't Vote",
-                            'Count': registered_voters - turnout[1]
+                            'Count': turnout[1] - turnout[2]
                         }
 
                         Results.append(ward_votes_voted)
                         Results.append(ward_votes_didnt_vote)
 
-                # for ward in completed_wards:
-                    
-                #     registered_voters = 0
-
-                #     sqlquery =  "SELECT * FROM LED_GIS_Display_Municipal WHERE fklMunicipalityId = " + str(ward[1]) + " AND fklEEId = " + ELECTORAL_EVENT_ID
-                #     cursor = conn.cursor()
-                #     cursor.execute(sqlquery)
-
-                #     for row in cursor:
-                #         registered_voters = row[21]
-
-                # sqlquery =  "Select EE_Municipalities.sDescription , sum(Fact_LGE_Master_VDStats.lVoterTurnout) from Fact_LGE_Master_VDStats join EE_Municipalities on fklMunicipalityID = EE_Municipalities.pklMunicipalityID where pkfklEEID = " + ELECTORAL_EVENT_ID + " and EE_Municipalities.pkfklDelimID = 78 group by EE_Municipalities.sDescription, fklMunicipalityID order by EE_Municipalities.sDescription" 
-                # cursor = conn.cursor()
-                # cursor.execute(sqlquery)
-
-                # for turnout in cursor:
-
-                #     for turnout in cursor:
-                #         ward_votes_voted = {
-                #             'Geography': turnout[0].split(' - ')[0],
-                #             'Voter Turnout': 'Voted',
-                #             'Count': turnout[1]
-                #         }
-
-                #         ward_votes_didnt_vote = {
-                #             'Geography': turnout[0].split(' - ')[0],
-                #             'Voter Turnout': "Didn't Vote",
-                #             'Count': registered_voters - turnout[1]
-                #         }
-
-                #         Results.append(ward_votes_voted)
-                #         Results.append(ward_votes_didnt_vote)
+                
 
                 upload()
 
@@ -746,38 +621,6 @@ async def main():
 
                 
                 upload()
-
-        #####
-        ## WARDS COMPLETE
-        #####
-
-        if(IEC_ENDPOINT == 'wards_complete'):
-            
-            sqlquery = """
-            select distinct EE_VotingDistricts.fklWardId
-            from EE_VotingDistricts
-            left join (
-                select fklWardId , fklVotingDistrict 
-                from (
-                    select fklWardId , fklVotingDistrict, sum(lTotalVotesCast) as VDTotalVotesCast 
-                    from LED_GIS_Display_VotingDistrict
-                    where fklEEId = 1091
-                    group by fklWardId, fklVotingDistrict 
-                ) VDVotesCast
-                where VDTotalVotesCast = 0
-            ) UnfinishedDistricts on EE_VotingDistricts.fklWardID = UnfinishedDistricts.fklWardId
-            where pkfklDelimID  = 78
-            and UnfinishedDistricts.fklWardId is NULL
-            order by EE_VotingDistricts.fklWardId
-            """
-            cursor = conn.cursor()
-            cursor.execute(sqlquery)
-
-            for row in cursor:
-                print(row)
-
-
-
 
 
 asyncio.run(main())
