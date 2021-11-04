@@ -380,31 +380,6 @@ async def run_program(url, query, session):
 
 
 
-async def run_side_program(endpoint, url, query, session, muni):
-    try:
-
-        if(endpoint == 'seats_won'):
-            response = await get_api_data(url, query, session)
-            if(response != None):
-                return {
-                    'muni': muni,
-                    'status': response['SeatCalculationCompleted']
-                }
-        
-        elif(endpoint == 'ward_votes_by_candidate'):
-            response = await get_api_data(url, query, session)
-            return response
-
-        elif(endpoint == 'councillors_elected'):
-            response = await get_api_data(url, query, session)
-            return response
-
-
-    except Exception as err:
-        print(f"Exception occured: {err}")
-        pass
-
-
 async def check_completed_wards():
     try:
         sqlquery = """
