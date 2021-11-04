@@ -583,20 +583,20 @@ async def main():
 
                 # NATIONAL
 
-                ward_votes_voted = {
+                national_votes_voted = {
                     'Geography': 'ZA',
                     'Voter Turnout': 'Voted',
                     'Count': provincial_turnout['Voted'].sum()
                 }
 
-                ward_votes_didnt_vote = {
+                national_votes_didnt_vote = {
                     'Geography': 'ZA',
                     'Voter Turnout': "Didn't Vote",
                     'Count': provincial_turnout['Didnt'].sum()
                 }
 
-                Results.append(ward_votes_voted)
-                Results.append(ward_votes_didnt_vote)
+                Results.append(national_votes_voted)
+                Results.append(national_votes_didnt_vote)
 
 
                 upload()
