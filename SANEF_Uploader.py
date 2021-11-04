@@ -34,6 +34,7 @@ wards_df = pd.read_csv('./delimitations/Wards.csv')
 Wards = wards_df.values.tolist()
 munis_df = pd.read_csv('./delimitations/Munis.csv')
 Munis = munis_df.values.tolist()
+munis_map = pd.read_csv('./delimitations/MunisMap.csv')
 
 async def get_api_data(url, query, session):
     api_url = IEC_API + url + str(query)
@@ -54,14 +55,14 @@ def upload():
     Results_df = pd.DataFrame(Results)
     Results_df.to_csv('datasets/' + file, index=False)
 
-    url = f"{WAZI_ENDPOINT}/api/v1/datasets/{DATASET_ID}/upload/"
+    # url = f"{WAZI_ENDPOINT}/api/v1/datasets/{DATASET_ID}/upload/"
 
-    headers = {'authorization': f"Token {WAZI_TOKEN}"}
-    files = {'file': open('datasets/' + file, 'rb')}
-    payload = {'update': True, 'overwrite': True}
+    # headers = {'authorization': f"Token {WAZI_TOKEN}"}
+    # files = {'file': open('datasets/' + file, 'rb')}
+    # payload = {'update': True, 'overwrite': True}
 
-    wazi_r = requests.post(url, headers=headers, data=payload, files=files)
-    wazi_r.raise_for_status()
+    # wazi_r = requests.post(url, headers=headers, data=payload, files=files)
+    # wazi_r.raise_for_status()
 
 async def run_program(url, query, session):
     try:
@@ -490,7 +491,113 @@ async def main():
                         Results.append(ward_votes_voted)
                         Results.append(ward_votes_didnt_vote)
 
-                
+                # AGGREGATE UP TO MUNI
+
+                results_df = pd.DataFrame(Results)
+                wards_ex = pd.merge(wards_df, munis_df, on=['ProvinceID','MunicipalityID'], how="inner").reset_index(drop=True)
+                votes_ex = pd.merge(results_df, wards_ex, left_on=['Geography'], right_on=['WardID'], how="inner").reset_index(drop=True)
+
+                voted = votes_ex.loc[votes_ex['Voter Turnout'] == "Voted"]
+                voted_agg = voted.groupby(by=['MunicipalityID'])['Count'].sum()
+
+                didnt_vote = votes_ex.loc[votes_ex['Voter Turnout'] == "Didn't Vote"]
+                didnt_vote_agg = didnt_vote.groupby(by=['MunicipalityID'])['Count'].sum()
+
+                muni_turnout = pd.merge(voted_agg,didnt_vote_agg, on="MunicipalityID").rename(columns={'Count_x':'Voted','Count_y':'Didnt'}).reset_index()
+
+                muni_turnout_df = pd.merge(muni_turnout,munis_df, on="MunicipalityID")
+
+                for index, row in muni_turnout_df.iterrows():
+
+                    ward_votes_voted = {
+                        'Geography': row['Municipality'],
+                        'Voter Turnout': 'Voted',
+                        'Count': row['Voted']
+                    }
+
+                    ward_votes_didnt_vote = {
+                        'Geography': row['Municipality'],
+                        'Voter Turnout': "Didn't Vote",
+                        'Count': row['Didnt']
+                    }
+
+                    Results.append(ward_votes_voted)
+                    Results.append(ward_votes_didnt_vote)
+
+                # AGGREGATE UP TO DISTRICT/METRO
+
+                muni_turnout_df2 = pd.merge(muni_turnout_df,munis_map, on="MunicipalityID")
+                voted_agg2 = muni_turnout_df2.groupby('ParentID')['Voted'].sum()
+
+                didnt_vote_agg2 = muni_turnout_df2.groupby('ParentID')['Didnt'].sum()
+
+                district_turnout = pd.merge(voted_agg2,didnt_vote_agg2, on="ParentID")
+
+                district_turnout_df = pd.merge(district_turnout,munis_df, left_on="ParentID", right_on="MunicipalityID")
+
+                for index, row in district_turnout_df.iterrows():
+
+                    district_votes_voted = {
+                        'Geography': row['Municipality'],
+                        'Voter Turnout': 'Voted',
+                        'Count': row['Voted']
+                    }
+
+                    district_votes_didnt_vote = {
+                        'Geography': row['Municipality'],
+                        'Voter Turnout': "Didn't Vote",
+                        'Count': row['Didnt']
+                    }
+
+                    Results.append(district_votes_voted)
+                    Results.append(district_votes_didnt_vote)
+
+                # AGGREGATE UP TO PROVINCE
+
+                district_turnout_df['ProvinceID'] = district_turnout_df['ProvinceID'].astype(str)
+                district_turnout_df['ProvinceID'] = district_turnout_df['ProvinceID'].map({'9': 'WC', '8': 'NW', '7':'LIM', '6':'NC','5':'MP', '4':'KZN', '3':'GT','2':'FS', '1':'EC'})
+
+                voted_agg3 = district_turnout_df.groupby('ProvinceID')['Voted'].sum()
+
+                didnt_vote_agg3 = district_turnout_df.groupby('ProvinceID')['Didnt'].sum()
+
+                provincial_turnout = pd.merge(voted_agg3,didnt_vote_agg3, on="ProvinceID").reset_index()
+
+       
+                for index, row in provincial_turnout.iterrows():
+
+                    provincial_votes_voted = {
+                        'Geography': row['ProvinceID'],
+                        'Voter Turnout': 'Voted',
+                        'Count': row['Voted']
+                    }
+
+                    provincial_votes_didnt_vote = {
+                        'Geography': row['ProvinceID'],
+                        'Voter Turnout': "Didn't Vote",
+                        'Count': row['Didnt']
+                    }
+
+                    Results.append(provincial_votes_voted)
+                    Results.append(provincial_votes_didnt_vote)
+
+                # NATIONAL
+
+                ward_votes_voted = {
+                    'Geography': 'ZA',
+                    'Voter Turnout': 'Voted',
+                    'Count': provincial_turnout['Voted'].sum()
+                }
+
+                ward_votes_didnt_vote = {
+                    'Geography': 'ZA',
+                    'Voter Turnout': "Didn't Vote",
+                    'Count': provincial_turnout['Didnt'].sum()
+                }
+
+                Results.append(ward_votes_voted)
+                Results.append(ward_votes_didnt_vote)
+
 
                 upload()
 
