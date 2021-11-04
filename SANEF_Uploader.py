@@ -55,14 +55,14 @@ def upload():
     Results_df = pd.DataFrame(Results)
     Results_df.to_csv('datasets/' + file, index=False)
 
-    # url = f"{WAZI_ENDPOINT}/api/v1/datasets/{DATASET_ID}/upload/"
+    url = f"{WAZI_ENDPOINT}/api/v1/datasets/{DATASET_ID}/upload/"
 
-    # headers = {'authorization': f"Token {WAZI_TOKEN}"}
-    # files = {'file': open('datasets/' + file, 'rb')}
-    # payload = {'update': True, 'overwrite': True}
+    headers = {'authorization': f"Token {WAZI_TOKEN}"}
+    files = {'file': open('datasets/' + file, 'rb')}
+    payload = {'update': True, 'overwrite': True}
 
-    # wazi_r = requests.post(url, headers=headers, data=payload, files=files)
-    # wazi_r.raise_for_status()
+    wazi_r = requests.post(url, headers=headers, data=payload, files=files)
+    wazi_r.raise_for_status()
 
 async def run_program(url, query, session):
     try:
