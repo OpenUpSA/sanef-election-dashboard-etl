@@ -85,9 +85,6 @@ async def run_program(url, query, session):
                     }
                 )
 
-       
-        
-
         #####
         ## WARD: VOTES BY CANDIDATE (1379)
         #####
@@ -106,7 +103,6 @@ async def run_program(url, query, session):
             else:
 
                 completed_wards = await check_completed_wards()
-
 
                 for ward in completed_wards:
                     
@@ -248,6 +244,22 @@ async def run_program(url, query, session):
                         }
                     )
 
+                Results.append(
+                    {
+                        'Geography': 'ZA',
+                        'Councils': 'Hung',
+                        'Count': dff2['bHung_x'].sum()
+                    }
+                )
+
+                Results.append(
+                    {
+                        'Geography': 'ZA',
+                        'Councils': 'Outright Majority',
+                        'Count': dff2['bHung_y'].sum() - dff2['bHung_x'].sum()
+                    }
+                )
+
 
         #####
         ## LIST OF HUNG COUNCILS (1424)
@@ -283,6 +295,7 @@ async def run_program(url, query, session):
 
                 hung_councils = dff.groupby(['ProvinceID'])
 
+                hung_councils_list = ''
 
                 for geo, group in hung_councils:
 
@@ -291,6 +304,7 @@ async def run_program(url, query, session):
                         contents += '<li><a href = https://sanef-local-gov.openup.org.za/#geo:' + row['Municipality'] + '>' + row['Municipality'] + ' - ' + row['MunicipalityName'] + ' </a> </li>'
 
                     contents += '</ul>'
+                    hung_councils_list += contents
 
                     Results.append(
                         {
@@ -298,6 +312,13 @@ async def run_program(url, query, session):
                             'Contents': contents
                         }
                     )
+
+                Results.append(
+                    {
+                        'Geography': 'ZA',
+                        'Contents': hung_councils_list
+                    }
+                )
 
 
         #####
@@ -360,7 +381,19 @@ async def run_program(url, query, session):
                         }
                     )
 
+                results_df = pd.DataFrame(Results)
+                councils_count = results_df.groupby('Party')['Count'].sum()
+                councils_count = pd.DataFrame(councils_count)
 
+                for index, row in councils_count.iterrows():
+
+                    Results.append(
+                        {
+                            'Geography': 'ZA',
+                            'Party': index,
+                            'Count': row.values[0]
+                        }
+                    )
 
         #####
         ## SEATS WON (1383)
@@ -701,12 +734,8 @@ async def main():
                                     'Seat Type': 'PR',
                                     'Count': party['PRSeats']
                                 }
-                            )         
-
-
-
+                            )
                 
                 upload()
-
 
 asyncio.run(main())
