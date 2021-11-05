@@ -34,6 +34,7 @@ wards_df = pd.read_csv('./delimitations/Wards.csv')
 Wards = wards_df.values.tolist()
 munis_df = pd.read_csv('./delimitations/Munis.csv')
 Munis = munis_df.values.tolist()
+munis_map = pd.read_csv('./delimitations/MunisMap.csv')
 
 async def get_api_data(url, query, session):
     api_url = IEC_API + url + str(query)
@@ -84,9 +85,6 @@ async def run_program(url, query, session):
                     }
                 )
 
-       
-        
-
         #####
         ## WARD: VOTES BY CANDIDATE (1379)
         #####
@@ -105,7 +103,6 @@ async def run_program(url, query, session):
             else:
 
                 completed_wards = await check_completed_wards()
-
 
                 for ward in completed_wards:
                     
@@ -247,6 +244,22 @@ async def run_program(url, query, session):
                         }
                     )
 
+                Results.append(
+                    {
+                        'Geography': 'ZA',
+                        'Councils': 'Hung',
+                        'Count': dff2['bHung_x'].sum()
+                    }
+                )
+
+                Results.append(
+                    {
+                        'Geography': 'ZA',
+                        'Councils': 'Outright Majority',
+                        'Count': dff2['bHung_y'].sum() - dff2['bHung_x'].sum()
+                    }
+                )
+
 
         #####
         ## LIST OF HUNG COUNCILS (1424)
@@ -282,6 +295,7 @@ async def run_program(url, query, session):
 
                 hung_councils = dff.groupby(['ProvinceID'])
 
+                hung_councils_list = ''
 
                 for geo, group in hung_councils:
 
@@ -290,6 +304,7 @@ async def run_program(url, query, session):
                         contents += '<li><a href = https://sanef-local-gov.openup.org.za/#geo:' + row['Municipality'] + '>' + row['Municipality'] + ' - ' + row['MunicipalityName'] + ' </a> </li>'
 
                     contents += '</ul>'
+                    hung_councils_list += contents
 
                     Results.append(
                         {
@@ -297,6 +312,13 @@ async def run_program(url, query, session):
                             'Contents': contents
                         }
                     )
+
+                Results.append(
+                    {
+                        'Geography': 'ZA',
+                        'Contents': hung_councils_list
+                    }
+                )
 
 
         #####
@@ -359,7 +381,19 @@ async def run_program(url, query, session):
                         }
                     )
 
+                results_df = pd.DataFrame(Results)
+                councils_count = results_df.groupby('Party')['Count'].sum()
+                councils_count = pd.DataFrame(councils_count)
 
+                for index, row in councils_count.iterrows():
+
+                    Results.append(
+                        {
+                            'Geography': 'ZA',
+                            'Party': index,
+                            'Count': row.values[0]
+                        }
+                    )
 
         #####
         ## SEATS WON (1383)
@@ -490,7 +524,113 @@ async def main():
                         Results.append(ward_votes_voted)
                         Results.append(ward_votes_didnt_vote)
 
-                
+                # AGGREGATE UP TO MUNI
+
+                results_df = pd.DataFrame(Results)
+                wards_ex = pd.merge(wards_df, munis_df, on=['ProvinceID','MunicipalityID'], how="inner").reset_index(drop=True)
+                votes_ex = pd.merge(results_df, wards_ex, left_on=['Geography'], right_on=['WardID'], how="inner").reset_index(drop=True)
+
+                voted = votes_ex.loc[votes_ex['Voter Turnout'] == "Voted"]
+                voted_agg = voted.groupby(by=['MunicipalityID'])['Count'].sum()
+
+                didnt_vote = votes_ex.loc[votes_ex['Voter Turnout'] == "Didn't Vote"]
+                didnt_vote_agg = didnt_vote.groupby(by=['MunicipalityID'])['Count'].sum()
+
+                muni_turnout = pd.merge(voted_agg,didnt_vote_agg, on="MunicipalityID").rename(columns={'Count_x':'Voted','Count_y':'Didnt'}).reset_index()
+
+                muni_turnout_df = pd.merge(muni_turnout,munis_df, on="MunicipalityID")
+
+                for index, row in muni_turnout_df.iterrows():
+
+                    ward_votes_voted = {
+                        'Geography': row['Municipality'],
+                        'Voter Turnout': 'Voted',
+                        'Count': row['Voted']
+                    }
+
+                    ward_votes_didnt_vote = {
+                        'Geography': row['Municipality'],
+                        'Voter Turnout': "Didn't Vote",
+                        'Count': row['Didnt']
+                    }
+
+                    Results.append(ward_votes_voted)
+                    Results.append(ward_votes_didnt_vote)
+
+                # AGGREGATE UP TO DISTRICT/METRO
+
+                muni_turnout_df2 = pd.merge(muni_turnout_df,munis_map, on="MunicipalityID")
+                voted_agg2 = muni_turnout_df2.groupby('ParentID')['Voted'].sum()
+
+                didnt_vote_agg2 = muni_turnout_df2.groupby('ParentID')['Didnt'].sum()
+
+                district_turnout = pd.merge(voted_agg2,didnt_vote_agg2, on="ParentID")
+
+                district_turnout_df = pd.merge(district_turnout,munis_df, left_on="ParentID", right_on="MunicipalityID")
+
+                for index, row in district_turnout_df.iterrows():
+
+                    district_votes_voted = {
+                        'Geography': row['Municipality'],
+                        'Voter Turnout': 'Voted',
+                        'Count': row['Voted']
+                    }
+
+                    district_votes_didnt_vote = {
+                        'Geography': row['Municipality'],
+                        'Voter Turnout': "Didn't Vote",
+                        'Count': row['Didnt']
+                    }
+
+                    Results.append(district_votes_voted)
+                    Results.append(district_votes_didnt_vote)
+
+                # AGGREGATE UP TO PROVINCE
+
+                district_turnout_df['ProvinceID'] = district_turnout_df['ProvinceID'].astype(str)
+                district_turnout_df['ProvinceID'] = district_turnout_df['ProvinceID'].map({'9': 'WC', '8': 'NW', '7':'LIM', '6':'NC','5':'MP', '4':'KZN', '3':'GT','2':'FS', '1':'EC'})
+
+                voted_agg3 = district_turnout_df.groupby('ProvinceID')['Voted'].sum()
+
+                didnt_vote_agg3 = district_turnout_df.groupby('ProvinceID')['Didnt'].sum()
+
+                provincial_turnout = pd.merge(voted_agg3,didnt_vote_agg3, on="ProvinceID").reset_index()
+
+       
+                for index, row in provincial_turnout.iterrows():
+
+                    provincial_votes_voted = {
+                        'Geography': row['ProvinceID'],
+                        'Voter Turnout': 'Voted',
+                        'Count': row['Voted']
+                    }
+
+                    provincial_votes_didnt_vote = {
+                        'Geography': row['ProvinceID'],
+                        'Voter Turnout': "Didn't Vote",
+                        'Count': row['Didnt']
+                    }
+
+                    Results.append(provincial_votes_voted)
+                    Results.append(provincial_votes_didnt_vote)
+
+                # NATIONAL
+
+                national_votes_voted = {
+                    'Geography': 'ZA',
+                    'Voter Turnout': 'Voted',
+                    'Count': provincial_turnout['Voted'].sum()
+                }
+
+                national_votes_didnt_vote = {
+                    'Geography': 'ZA',
+                    'Voter Turnout': "Didn't Vote",
+                    'Count': provincial_turnout['Didnt'].sum()
+                }
+
+                Results.append(national_votes_voted)
+                Results.append(national_votes_didnt_vote)
+
 
                 upload()
 
@@ -594,12 +734,8 @@ async def main():
                                     'Seat Type': 'PR',
                                     'Count': party['PRSeats']
                                 }
-                            )         
-
-
-
+                            )
                 
                 upload()
-
 
 asyncio.run(main())
