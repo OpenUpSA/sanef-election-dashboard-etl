@@ -444,6 +444,21 @@ async def check_completed_wards():
 
             completed_wards.append([ward[0],ward[1],ward[2]])
 
+        # MISSING WARDS
+
+        if [2,2210,41801002] not in completed_wards:
+            completed_wards.append([2,2210,41801002])
+        if [9,9911,10204017] not in completed_wards:
+            completed_wards.append([9,9911,10204017])
+        if [1,1118,21206004] not in completed_wards:
+            completed_wards.append([1,1118,21206004])
+        if [1,1131,21401013] not in completed_wards:
+            completed_wards.append([1,1131,21401013])
+            
+
+        # completed_wards_df = pd.DataFrame(completed_wards)
+        # completed_wards_df.to_csv('datasets/wards.csv')
+
         return completed_wards
     
     except Exception as err:
